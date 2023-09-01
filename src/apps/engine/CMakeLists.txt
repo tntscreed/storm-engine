@@ -38,3 +38,5 @@ STORM_SETUP(
     # system
     ${SYSTEM_DEPS}
 )
+
+add_dependencies(engine engine_techniques)
