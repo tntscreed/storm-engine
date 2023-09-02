@@ -400,9 +400,11 @@ void WdmClouds::CreateVertexDeclaration(VDX9RENDER *rs)
 
     rs->CreateVertexDeclaration(VertexElements, &vertexDecl_);
 
+#ifdef _WIN32 // Effects
     fx_ = rs->GetEffectPointer("WdmClouds");
     if (fx_ != nullptr) {
         projectionMatrix_ = fx_->GetParameterByName(nullptr, "projectionMatrix");
         cloudMatrix_ = fx_->GetParameterByName(nullptr, "cloudMatrix");
     }
+#endif
 }
