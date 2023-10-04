@@ -265,7 +265,7 @@ void BICommandList::Init()
 
         // get note font parameters
         if (pAList->GetAttribute("CommandNoteFont"))
-            m_NoteFontID = m_pRS->LoadFont(pAList->GetAttribute("CommandNoteFont"));
+            m_NoteFontID = m_pRS->LoadFont(to_string(pAList->GetAttribute("CommandNoteFont")));
         m_NoteFontColor = pAList->GetAttributeAsDword("CommandNoteColor", m_NoteFontColor);
         m_NoteFontScale = pAList->GetAttributeAsFloat("CommandNoteScale", m_NoteFontScale);
         if (pAList->GetAttribute("CommandNoteOffset"))

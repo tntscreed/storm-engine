@@ -235,7 +235,7 @@ class VDX9RENDER : public SERVICE
     virtual int32_t StringWidth(const std::string_view &string, int32_t nFontNum = 0, float fScale = 1.f, int32_t scrWidth = 0) = 0;
     virtual int32_t CharWidth(utf8::u8_char ucVKey, int32_t nFontNum = 0, float fScale = 1.f, int32_t scrWidth = 0) = 0;
     virtual int32_t CharHeight(int32_t fontID) = 0;
-    virtual int32_t LoadFont(const char *fontName) = 0;   // returns the number \ font id, or -1 on error
+    virtual int32_t LoadFont(const std::string_view &fontName) = 0;   // returns the number \ font id, or -1 on error
     virtual bool UnloadFont(const char *fontName) = 0; // returns true if the font is still in use
     virtual bool UnloadFont(int32_t fontID) = 0;          // returns true if the font is still in use
     virtual bool IncRefCounter(int32_t fontID) = 0;       // increase reference counter if object is being copied
