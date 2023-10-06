@@ -19,12 +19,15 @@ class VFont
     virtual ~VFont() = default;
 
     [[nodiscard]] virtual std::optional<size_t> Print(size_t x, size_t y, const std::string_view &text,
-                                        const FontPrintOverrides &overrides = {}) = 0;
+                                                      const FontPrintOverrides &overrides = {}) = 0;
 
     [[nodiscard]] virtual size_t GetStringWidth(const std::string_view &text,
                                                 const FontPrintOverrides &overrides = {}) const = 0;
 
     [[nodiscard]] virtual size_t GetHeight() const = 0;
+
+    virtual void TempUnload() = 0;
+    virtual void RepeatInit() = 0;
 };
 
 } // namespace storm
@@ -46,8 +49,8 @@ class FONT final : public storm::VFont
     FONT(VDX9RENDER &renderer, IDirect3DDevice9 &device);
     ~FONT() override;
     bool Init(const char *font_name, const char *iniName);
-    void TempUnload();
-    void RepeatInit();
+    void TempUnload() override;
+    void RepeatInit() override;
 
     std::optional<size_t> Print(size_t x, size_t y, const std::string_view &text,
                                 const storm::FontPrintOverrides &overrides = {}) override;

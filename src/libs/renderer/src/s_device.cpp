@@ -2,17 +2,18 @@
 
 #include "core.h"
 
+#include "debug-trap.h"
 #include "entity.h"
+#include "fs.h"
 #include "math_inlines.h"
 #include "s_import_func.h"
+#include "storm/font_loading.hpp"
+#include "string_compare.hpp"
 #include "texture.h"
 #include "v_s_stack.h"
-#include "fs.h"
-#include "debug-trap.h"
-#include "string_compare.hpp"
 
-#include <algorithm>
 #include <SDL_timer.h>
+#include <algorithm>
 
 #include <fmt/chrono.h>
 
@@ -2949,13 +2950,9 @@ int32_t DX9RENDER::LoadFont(const std::string_view &fontName)
             throw std::runtime_error("maximal font quantity exceeded");
         }
 
-        auto font = std::make_unique<FONT>(*this, *d3d9);
+        auto font = storm::LoadFont(fontName, fontIniFileName, *this, *d3d9);
         if (font == nullptr) {
-            throw std::runtime_error("allocate memory error");
-        }
-        if (!font->Init(sDup.c_str(), fontIniFileName))
-        {
-            core.Trace("Can't init font %s", fontName);
+            core.Trace("Can't load font %s", sDup.c_str());
             return -1L;
         }
         FontList.emplace_back(FONTEntity{
@@ -3086,10 +3083,13 @@ bool DX9RENDER::SetFontIniFileName(const char *iniName)
 
     for (int n = 0; n < FontList.size(); n++)
     {
-        FontList[n].font = std::make_unique<FONT>(*this, *d3d9);
+        const std::string font_name = FontList[n].name;
+        FontList[n].font = storm::LoadFont(font_name, fontIniFileName, *this, *d3d9);
         if (FontList[n].font == nullptr)
-            throw std::runtime_error("allocate memory error");
-        FontList[n].font->Init(FontList[n].name.c_str(), fontIniFileName);
+        {
+            core.Trace("Can't reload font %s", font_name.c_str());
+            return false;
+        }
         if (FontList[n].ref == 0)
             FontList[n].font->TempUnload();
     }
