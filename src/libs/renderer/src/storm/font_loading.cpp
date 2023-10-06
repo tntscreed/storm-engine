@@ -1,5 +1,6 @@
 #include "font_loading.hpp"
 
+#include "bmfont/bmfont.hpp"
 #include "core.h"
 #include "v_file_service.h"
 
@@ -19,6 +20,10 @@ std::unique_ptr<VFont> LoadFont(const std::string_view &font_name,
     if (ini->TestKey(font_name_str.c_str(), "file", nullptr)) {
         auto msg = fmt::format("Loading BmFont {}", font_name);
         core.Trace(msg.c_str());
+        std::string fnt_path;
+        fnt_path.resize(MAX_PATH);
+        ini->ReadString(font_name_str.c_str(), "file", fnt_path.data(), fnt_path.size());
+        return std::make_unique<bmfont::BmFont>(fnt_path, renderer);
     }
     else {
         auto result = std::make_unique<FONT>(renderer, device);
