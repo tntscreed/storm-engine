@@ -677,10 +677,6 @@ DX9RENDER::~DX9RENDER()
     delete progressTipsImage;
     progressTipsImage = nullptr;
 
-    for (int i = 0; i < FontList.size(); i++)
-    {
-        delete FontList[i].font;
-    }
     delete fontIniFileName;
 
     STORM_DELETE(DX9sphereVertex);
@@ -2805,7 +2801,7 @@ int32_t DX9RENDER::Print(int32_t x, int32_t y, const char *format, ...)
     vsnprintf(Buff_4k, sizeof(Buff_4k), format, args);
     va_end(args);
 
-    return FontList[idFontCurrent].font->Print(x, y, Buff_4k);
+    return FontList[idFontCurrent].font->Print(x, y, Buff_4k).value_or(0);
     // UNGUARD
 }
 
@@ -2822,7 +2818,7 @@ int32_t DX9RENDER::Print(int32_t nFontNum, uint32_t color, int32_t x, int32_t y,
     vsnprintf(Buff_4k, sizeof(Buff_4k), format, args);
     va_end(args);
 
-    const int32_t retVal = FontList[nFontNum].font->Print(x, y, Buff_4k, {.color = color});
+    const int32_t retVal = FontList[nFontNum].font->Print(x, y, Buff_4k, {.color = color}).value_or(0);
     return retVal;
     // UNGUARD
 }
@@ -2840,7 +2836,7 @@ int32_t DX9RENDER::StringWidth(const std::string_view &string, int32_t nFontNum,
 {
     if (nFontNum < 0 || nFontNum >= FontList.size())
         return 0;
-    FONT *pFont = FontList[nFontNum].font;
+    const auto &pFont = FontList[nFontNum].font;
     if (FontList[nFontNum].ref == 0 || pFont == nullptr)
         return 0;
 
@@ -2850,7 +2846,7 @@ int32_t DX9RENDER::StringWidth(const std::string_view &string, int32_t nFontNum,
         scrWidth = xs;
     if (xs != scrWidth)
         fScale *= static_cast<float>(xs) / scrWidth;
-    const int32_t retVal = pFont->GetStringWidth(string, fScale);
+    const int32_t retVal = pFont->GetStringWidth(string, {.scale = fScale});
     return retVal;
 }
 
@@ -2877,7 +2873,7 @@ int32_t DX9RENDER::ExtPrint(int32_t nFontNum, uint32_t foreColor, uint32_t backC
 
     if (nFontNum < 0 || nFontNum >= FontList.size())
         return 0;
-    FONT *pFont = FontList[nFontNum].font;
+    const auto &pFont = FontList[nFontNum].font;
     if (FontList[nFontNum].ref == 0 || pFont == nullptr)
         return 0;
 
@@ -2921,7 +2917,7 @@ int32_t DX9RENDER::ExtPrint(int32_t nFontNum, uint32_t foreColor, uint32_t backC
                                             .scale = fScale,
                                             .color = foreColor,
                                             .shadow = bShadow,
-                                        });
+                                        }).value_or(0);
     return retVal;
     // UNGUARD
 }
@@ -2953,20 +2949,19 @@ int32_t DX9RENDER::LoadFont(const std::string_view &fontName)
             throw std::runtime_error("maximal font quantity exceeded");
         }
 
-        auto *font = new FONT(*this, *d3d9);
+        auto font = std::make_unique<FONT>(*this, *d3d9);
         if (font == nullptr) {
             throw std::runtime_error("allocate memory error");
         }
         if (!font->Init(sDup.c_str(), fontIniFileName))
         {
-            delete font;
             core.Trace("Can't init font %s", fontName);
             return -1L;
         }
         FontList.emplace_back(FONTEntity{
             sDup,
             hashVal,
-            font,
+            std::move(font),
             1,
         });
         return FontList.size() - 1;
@@ -3091,9 +3086,8 @@ bool DX9RENDER::SetFontIniFileName(const char *iniName)
 
     for (int n = 0; n < FontList.size(); n++)
     {
-        delete FontList[n].font;
-
-        if ((FontList[n].font = new FONT(*this, *d3d9)) == nullptr)
+        FontList[n].font = std::make_unique<FONT>(*this, *d3d9);
+        if (FontList[n].font == nullptr)
             throw std::runtime_error("allocate memory error");
         FontList[n].font->Init(FontList[n].name.c_str(), fontIniFileName);
         if (FontList[n].ref == 0)

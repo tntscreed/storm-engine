@@ -131,12 +131,12 @@ inline int Utf8ToCodepoint(const char *utf8)
     return -1;
 }
 
-inline int Utf8StringLength(const char *s)
+inline int Utf8StringLength(const std::string_view &s)
 {
     int32_t s_num = 0;
-    while (*s)
-        s_num += (*s++ & 0xC0) != 0x80;
-
+    for (const char c : s) {
+        s_num += (c & 0xC0) != 0x80;
+    }
     return s_num;
 }
 

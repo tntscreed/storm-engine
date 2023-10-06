@@ -197,14 +197,15 @@ void OffsetFRect(FLOAT_RECT &fr, float dx, float dy)
     fr.y2 += dy;
 }
 
-int32_t FONT::GetStringWidth(const std::string_view &text, std::optional<float> scale_override) const
+size_t FONT::GetStringWidth(const std::string_view &text,
+                                            const storm::FontPrintOverrides &overrides) const
 {
     if (text.empty())
         return 0;
     float xoffset = 0;
     const int32_t s_num = text.size();
 
-    const float scale = scale_override.value_or(scale_);
+    const float scale = overrides.scale.value_or(scale_);
 
     for (int32_t i = 0; i < s_num; i += utf8::u8_inc(text.data() + i))
     {
@@ -235,7 +236,7 @@ int32_t FONT::GetStringWidth(const std::string_view &text, std::optional<float> 
     return static_cast<int32_t>(xoffset);
 }
 
-int32_t FONT::UpdateVertexBuffer(int32_t x, int32_t y, char *data_PTR, int utf8length, float scale, uint32_t color)
+int32_t FONT::UpdateVertexBuffer(int32_t x, int32_t y, const char *data_PTR, int utf8length, float scale, uint32_t color)
 {
     int32_t s_num;
     int32_t n;
@@ -324,14 +325,18 @@ int32_t FONT::UpdateVertexBuffer(int32_t x, int32_t y, char *data_PTR, int utf8l
     return static_cast<int32_t>(xoffset);
 }
 
-int32_t FONT::Print(int32_t x, int32_t y, char *data_PTR, const FONT_PRINT_OVERRIDES &overrides)
+std::optional<size_t> FONT::Print(size_t x, size_t y, const std::string_view &text,
+                            const storm::FontPrintOverrides &overrides)
 {
-    if (data_PTR == nullptr || techniqueName_.empty())
+    if (text.empty())
         return 0;
     auto xoffset = 0L;
-    int32_t s_num = utf8::Utf8StringLength(data_PTR);
+    int32_t s_num = utf8::Utf8StringLength(text);
     if (s_num == 0)
         return 0;
+
+    const auto str = std::string(text);
+    const char *data_PTR = str.c_str();
 
     const auto bDraw = renderService_.TechniqueExecuteStart(techniqueName_.c_str());
     if (!bDraw)

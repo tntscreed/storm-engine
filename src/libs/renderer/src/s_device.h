@@ -65,7 +65,7 @@ struct FONTEntity
 {
     std::string name;
     uint32_t hash;
-    FONT *font;
+    std::unique_ptr<FONT> font;
     int32_t ref;
 };
 
