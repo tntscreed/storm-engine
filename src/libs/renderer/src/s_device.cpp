@@ -2802,7 +2802,7 @@ int32_t DX9RENDER::Print(int32_t x, int32_t y, const char *format, ...)
     vsnprintf(Buff_4k, sizeof(Buff_4k), format, args);
     va_end(args);
 
-    return FontList[idFontCurrent].font->Print(x, y, Buff_4k).value_or(0);
+    return FontList[idFontCurrent].font->Print(static_cast<float>(x), static_cast<float>(y), Buff_4k).value_or(0);
     // UNGUARD
 }
 
@@ -2819,7 +2819,7 @@ int32_t DX9RENDER::Print(int32_t nFontNum, uint32_t color, int32_t x, int32_t y,
     vsnprintf(Buff_4k, sizeof(Buff_4k), format, args);
     va_end(args);
 
-    const int32_t retVal = FontList[nFontNum].font->Print(x, y, Buff_4k, {.color = color}).value_or(0);
+    const int32_t retVal = FontList[nFontNum].font->Print(static_cast<float>(x), static_cast<float>(y), Buff_4k, {.color = color}).value_or(0);
     return retVal;
     // UNGUARD
 }
@@ -2913,7 +2913,7 @@ int32_t DX9RENDER::ExtPrint(int32_t nFontNum, uint32_t foreColor, uint32_t backC
         break;
     }
 
-    const int32_t retVal = pFont->Print(x, y, Buff_4k,
+    const int32_t retVal = pFont->Print(static_cast<float>(x), static_cast<float>(y), Buff_4k,
                                         {
                                             .scale = fScale,
                                             .color = foreColor,
@@ -2943,7 +2943,7 @@ int32_t DX9RENDER::LoadFont(const std::string_view &fontName)
             existing_font->ref = 1;
             existing_font->font->RepeatInit();
         }
-        return true;
+        return std::distance(std::begin(FontList), existing_font);
     }
     else {
         if (FontList.size() >= MAX_FONTS) {

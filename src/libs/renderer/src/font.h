@@ -18,7 +18,7 @@ class VFont
   public:
     virtual ~VFont() = default;
 
-    [[nodiscard]] virtual std::optional<size_t> Print(size_t x, size_t y, const std::string_view &text,
+    [[nodiscard]] virtual std::optional<size_t> Print(float x, float y, const std::string_view &text,
                                                       const FontPrintOverrides &overrides = {}) = 0;
 
     [[nodiscard]] virtual size_t GetStringWidth(const std::string_view &text,
@@ -52,7 +52,7 @@ class FONT final : public storm::VFont
     void TempUnload() override;
     void RepeatInit() override;
 
-    std::optional<size_t> Print(size_t x, size_t y, const std::string_view &text,
+    std::optional<size_t> Print(float x, float y, const std::string_view &text,
                                 const storm::FontPrintOverrides &overrides = {}) override;
 
     [[nodiscard]] size_t GetStringWidth(const std::string_view &text,

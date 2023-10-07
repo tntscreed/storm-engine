@@ -325,7 +325,7 @@ int32_t FONT::UpdateVertexBuffer(int32_t x, int32_t y, const char *data_PTR, int
     return static_cast<int32_t>(xoffset);
 }
 
-std::optional<size_t> FONT::Print(size_t x, size_t y, const std::string_view &text,
+std::optional<size_t> FONT::Print(float x, float y, const std::string_view &text,
                             const storm::FontPrintOverrides &overrides)
 {
     if (text.empty())
@@ -352,14 +352,14 @@ std::optional<size_t> FONT::Print(size_t x, size_t y, const std::string_view &te
     const uint32_t color = overrides.color.value_or(color_);
     if (drawShadows)
     {
-        UpdateVertexBuffer(x + shadowOffsetX_, y + shadowOffsetY_, data_PTR, s_num, scale, color);
+        UpdateVertexBuffer(static_cast<int32_t>(x) + shadowOffsetX_, static_cast<int32_t>(y) + shadowOffsetY_, data_PTR, s_num, scale, color);
 
         device_.SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ZERO);
         device_.SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
 
         device_.DrawPrimitive(D3DPT_TRIANGLELIST, 0, s_num * 2);
     }
-    xoffset = UpdateVertexBuffer(x, y, data_PTR, s_num, scale, color);
+    xoffset = UpdateVertexBuffer(static_cast<int32_t>(x), static_cast<int32_t>(y), data_PTR, s_num, scale, color);
     device_.SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
     device_.SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
     device_.DrawPrimitive(D3DPT_TRIANGLELIST, 0, s_num * 2);

@@ -1,11 +1,26 @@
 #include "bmfont.hpp"
+#include "core.h"
 
 #include <array>
+#include <filesystem>
 #include <fstream>
 
 namespace storm::bmfont {
 
 namespace {
+
+constexpr size_t MAX_SYMBOLS = 512;
+constexpr size_t SYM_VERTEXS = 6;
+
+constexpr auto FONT_CHAR_FVF = (D3DFVF_XYZRHW | D3DFVF_DIFFUSE | D3DFVF_TEX1 | D3DFVF_TEXTUREFORMAT2);
+
+struct BMFONT_CHAR_VERTEX
+{
+    CVECTOR pos;
+    float rhw;
+    uint32_t color;
+    float tu, tv;
+};
 
 bool IsSignatureValid(const std::array<char, 4> &signature) {
     return signature[0] == 'B' && signature[1] == 'M' && signature[2] == 'F' && signature[3] == 3;
@@ -38,37 +53,85 @@ std::string ReadString(std::ifstream &stream)
 } // namespace
 
 BmFont::BmFont(const std::string_view &file_path, VDX9RENDER &renderer)
+    : renderer_(renderer)
 {
     LoadFromFnt(std::string(file_path));
+
+    InitTextures();
+    InitVertexBuffer();
 }
 
-std::optional<size_t> BmFont::Print(size_t x, size_t y, const std::string_view &text,
+std::optional<size_t> BmFont::Print(float x, float y, const std::string_view &text,
                                     const FontPrintOverrides &overrides)
 {
-    return std::optional<size_t>();
+    if (text.empty())
+        return {};
+    const float scale = overrides.scale.value_or(1.f);
+    const uint32_t color = overrides.color.value_or(0xFFFFFFFF);
+
+    renderer_.TechniqueExecuteStart("InterfaceFont");
+
+    renderer_.TextureSet(0, textures_[0].textureHandle_);
+    renderer_.SetFVF(FONT_CHAR_FVF);
+    renderer_.SetStreamSource(0, renderer_.GetVertexBuffer(vertexBuffer_), sizeof(BMFONT_CHAR_VERTEX));
+
+    auto result = UpdateVertexBuffer(x, y, text, scale, color);
+    renderer_.SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
+    renderer_.SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
+    renderer_.DrawPrimitive(D3DPT_TRIANGLELIST, 0, result.characters * 2);
+
+    while(renderer_.TechniqueExecuteNext());
+
+    return static_cast<size_t>(result.xoffset);
 }
 
 size_t BmFont::GetStringWidth(const std::string_view &text, const FontPrintOverrides &overrides) const
 {
-    return 0;
+    if (text.empty())
+        return 0;
+    float xoffset = 0;
+    const float scale = overrides.scale.value_or(1.f);
+
+    for (size_t i = 0; i < text.size(); i += utf8::u8_inc(text.data() + i))
+    {
+        char32_t codepoint = utf8::Utf8ToCodepoint(text.data() + i);
+
+        const BmCharacter *character = GetCharacter(codepoint);
+
+        if (character == nullptr) {
+            core.Trace("Unsupported codepoint: %d", codepoint);
+            continue;
+        }
+
+        xoffset += static_cast<float>(character->xadvance) * scale;
+    }
+
+    return static_cast<int32_t>(xoffset);
 }
 
 size_t BmFont::GetHeight() const
 {
-    return 0;
+    return lineHeight_;
 }
 
 void BmFont::TempUnload()
 {
+    for (auto &texture : textures_) {
+        renderer_.TextureRelease(texture.textureHandle_);
+        texture.textureHandle_ = -1;
+    }
 }
 
 void BmFont::RepeatInit()
 {
+    InitTextures();
 }
 
 void BmFont::LoadFromFnt(const std::string &file_path)
 {
-    std::ifstream file(file_path, std::ios::binary);
+    const std::filesystem::path path = file_path;
+    const auto directory = path.parent_path();
+    std::ifstream file(path, std::ios::binary);
 
     std::array<char, 4> signature{};
     file.read(signature.data(), signature.size());
@@ -101,7 +164,7 @@ void BmFont::LoadFromFnt(const std::string &file_path)
         }
         case 3: { // pages
             for (auto &texture : textures_) {
-                texture.texturePath_ = ReadString(file);
+                texture.texturePath_ = (directory / std::filesystem::path(ReadString(file))).string();
             }
             break;
         }
@@ -141,6 +204,115 @@ void BmFont::LoadFromFnt(const std::string &file_path)
             break;
         }
     }
+}
+
+void BmFont::InitTextures()
+{
+    for (auto &texture : textures_) {
+        if (texture.textureHandle_ == -1) {
+            texture.textureHandle_ = renderer_.TextureCreate(texture.texturePath_.c_str());
+        }
+    }
+}
+
+void BmFont::InitVertexBuffer()
+{
+    vertexBuffer_ = renderer_.CreateVertexBuffer(FONT_CHAR_FVF, sizeof(BMFONT_CHAR_VERTEX) * MAX_SYMBOLS * SYM_VERTEXS, D3DUSAGE_DYNAMIC | D3DUSAGE_WRITEONLY);
+
+    auto *vertices = reinterpret_cast<BMFONT_CHAR_VERTEX *>(renderer_.LockVertexBuffer(vertexBuffer_));
+    for (size_t codepoint = 0; codepoint < MAX_SYMBOLS * SYM_VERTEXS; codepoint++)
+    {
+        vertices[codepoint].pos.z = 0.5f;
+    }
+    renderer_.UnLockVertexBuffer(vertexBuffer_);
+}
+
+BmFont::UpdateVertexBufferResult BmFont::UpdateVertexBuffer(float x, float y, const std::string_view &text, float scale, uint32_t color)
+{
+    UpdateVertexBufferResult result{
+        .xoffset = x,
+    };
+
+    auto *vertices = reinterpret_cast<BMFONT_CHAR_VERTEX *>(renderer_.LockVertexBuffer(vertexBuffer_));
+
+    for (size_t i = 0; i < text.size(); i += utf8::u8_inc(text.data() + i))
+    {
+        char32_t codepoint = utf8::Utf8ToCodepoint(text.data() + i);
+
+        const BmCharacter *character = GetCharacter(codepoint);
+
+        if (character == nullptr) {
+            core.Trace("Unsupported codepoint: %d", codepoint);
+            continue;
+        }
+
+        ++result.characters;
+
+        FLOAT_RECT pos {
+            (result.xoffset + static_cast<float>(character->xoffset)) * scale,
+            (y + static_cast<float>(character->yoffset)) * scale,
+            (result.xoffset + static_cast<float>(character->xoffset + character->width)) * scale,
+            (y + static_cast<float>(character->yoffset + character->height)) * scale,
+        };
+
+        BMFONT_CHAR_VERTEX *verts = vertices + i * 6;
+        verts[0].pos.x = pos.x1;
+        verts[1].pos.x = pos.x1;
+        verts[2].pos.x = pos.x2;
+        verts[3].pos.x = pos.x1;
+        verts[4].pos.x = pos.x2;
+        verts[5].pos.x = pos.x2;
+
+        verts[0].pos.y = pos.y1;
+        verts[1].pos.y = pos.y2;
+        verts[2].pos.y = pos.y1;
+        verts[3].pos.y = pos.y2;
+        verts[4].pos.y = pos.y2;
+        verts[5].pos.y = pos.y1;
+
+        FLOAT_RECT uv {
+            (static_cast<float>(character->x) + .5f) / textureWidth_,
+            (static_cast<float>(character->y) + .5f) / textureHeight_,
+            (static_cast<float>(character->x + character->width) + .5f) / textureWidth_,
+            (static_cast<float>(character->y + character->height) + .5f) / textureHeight_,
+        };
+
+        verts[0].tu = uv.x1;
+        verts[1].tu = uv.x1;
+        verts[2].tu = uv.x2;
+        verts[3].tu = uv.x1;
+        verts[4].tu = uv.x2;
+        verts[5].tu = uv.x2;
+
+        verts[0].tv = uv.y1;
+        verts[1].tv = uv.y2;
+        verts[2].tv = uv.y1;
+        verts[3].tv = uv.y2;
+        verts[4].tv = uv.y2;
+        verts[5].tv = uv.y1;
+
+        for (size_t j = 0; j < SYM_VERTEXS; ++j) {
+            verts[j].color = color;
+            verts[j].rhw = scale;
+        }
+
+        result.xoffset += static_cast<float>(character->xadvance) * scale;
+    }
+
+    renderer_.UnLockVertexBuffer(vertexBuffer_);
+
+    return result;
+}
+
+const BmCharacter *BmFont::GetCharacter(int32_t id) const
+{
+    auto found = std::lower_bound(std::begin(characters_), std::end(characters_), id, [] (const BmCharacter &character, int32_t id) {
+        return character.id < id;
+    });
+    if (found->id == id) {
+        return &*found;
+    }
+    return nullptr;
 }
 
 } // namespace storm::bmfont
