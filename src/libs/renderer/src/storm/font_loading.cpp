@@ -23,7 +23,9 @@ std::unique_ptr<VFont> LoadFont(const std::string_view &font_name,
         std::string fnt_path;
         fnt_path.resize(MAX_PATH);
         ini->ReadString(font_name_str.c_str(), "file", fnt_path.data(), fnt_path.size());
-        return std::make_unique<bmfont::BmFont>(fnt_path, renderer);
+        auto result = std::make_unique<bmfont::BmFont>(fnt_path, renderer);
+        result->SetScale(ini->GetDouble(font_name_str.c_str(), "pcscale", 1));
+        return result;
     }
     else {
         auto result = std::make_unique<FONT>(renderer, device);

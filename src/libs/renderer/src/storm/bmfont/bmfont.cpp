@@ -66,7 +66,7 @@ std::optional<size_t> BmFont::Print(float x, float y, const std::string_view &te
 {
     if (text.empty())
         return {};
-    const float scale = overrides.scale.value_or(1.f);
+    const float scale = scale_ * overrides.scale.value_or(1.f);
     const uint32_t color = overrides.color.value_or(0xFFFFFFFF);
 
     renderer_.TechniqueExecuteStart("InterfaceFont");
@@ -90,7 +90,7 @@ size_t BmFont::GetStringWidth(const std::string_view &text, const FontPrintOverr
     if (text.empty())
         return 0;
     float xoffset = 0;
-    const float scale = overrides.scale.value_or(1.f);
+    const float scale = scale_ * overrides.scale.value_or(1.f);
 
     for (size_t i = 0; i < text.size(); i += utf8::u8_inc(text.data() + i))
     {
@@ -125,6 +125,12 @@ void BmFont::TempUnload()
 void BmFont::RepeatInit()
 {
     InitTextures();
+}
+
+BmFont &BmFont::SetScale(double scale)
+{
+    scale_ = scale;
+    return *this;
 }
 
 void BmFont::LoadFromFnt(const std::string &file_path)
@@ -249,10 +255,10 @@ BmFont::UpdateVertexBufferResult BmFont::UpdateVertexBuffer(float x, float y, co
         ++result.characters;
 
         FLOAT_RECT pos {
-            (result.xoffset + static_cast<float>(character->xoffset)) * scale,
-            (y + static_cast<float>(character->yoffset)) * scale,
-            (result.xoffset + static_cast<float>(character->xoffset + character->width)) * scale,
-            (y + static_cast<float>(character->yoffset + character->height)) * scale,
+            result.xoffset + (static_cast<float>(character->xoffset)) * scale,
+            y + (static_cast<float>(character->yoffset)) * scale,
+            result.xoffset + (static_cast<float>(character->xoffset + character->width)) * scale,
+            y + (static_cast<float>(character->yoffset + character->height)) * scale,
         };
 
         BMFONT_CHAR_VERTEX *verts = vertices + i * 6;

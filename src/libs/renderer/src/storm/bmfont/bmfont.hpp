@@ -47,6 +47,8 @@ class BmFont : public VFont {
     void TempUnload() override;
     void RepeatInit() override;
 
+    BmFont &SetScale(double scale);
+
   private:
     void LoadFromFnt(const std::string &file_path);
 
@@ -67,6 +69,8 @@ class BmFont : public VFont {
     std::vector<BmTexture> textures_;
 
     VDX9RENDER &renderer_;
+
+    double scale_ = 1;
 
     size_t lineHeight_{};
     size_t base_{};
