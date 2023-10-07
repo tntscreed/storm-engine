@@ -305,7 +305,7 @@ TSD_ID SoundService::SoundPlay(const std::string_view &name, eSoundType _type, e
     auto FileName = std::string(name);
 
     // aliases don`t contain `\`
-    if (!name.contains('\\'))
+    if (name.find_first_of('\\') == std::string::npos)
     {
         // Trying to find in aliases
         const auto AliasIdx = GetAliasIndexByName(FileName.c_str());
