@@ -62,7 +62,8 @@ class BmFont : public VFont {
 
     UpdateVertexBufferResult UpdateVertexBuffer(float x, float y, const std::string_view &text, float scale, uint32_t color);
 
-    const BmCharacter *GetCharacter(int32_t id) const;
+    const BmCharacter *GetCharacter(char32_t id) const;
+    int16_t GetKerning(char32_t first, char32_t second) const;
 
     std::vector<BmCharacter> characters_;
     std::vector<BmKerning> kerning_;

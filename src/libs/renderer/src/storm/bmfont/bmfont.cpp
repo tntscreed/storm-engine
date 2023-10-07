@@ -92,6 +92,8 @@ size_t BmFont::GetStringWidth(const std::string_view &text, const FontPrintOverr
     float xoffset = 0;
     const float scale = scale_ * overrides.scale.value_or(1.f);
 
+    char32_t previous = '\0';
+
     for (size_t i = 0; i < text.size(); i += utf8::u8_inc(text.data() + i))
     {
         char32_t codepoint = utf8::Utf8ToCodepoint(text.data() + i);
@@ -103,7 +105,9 @@ size_t BmFont::GetStringWidth(const std::string_view &text, const FontPrintOverr
             continue;
         }
 
+        xoffset += static_cast<float>(GetKerning(previous, codepoint)) * scale;
         xoffset += static_cast<float>(character->xadvance) * scale;
+        previous = codepoint;
     }
 
     return static_cast<int32_t>(xoffset);
@@ -241,6 +245,8 @@ BmFont::UpdateVertexBufferResult BmFont::UpdateVertexBuffer(float x, float y, co
 
     auto *vertices = reinterpret_cast<BMFONT_CHAR_VERTEX *>(renderer_.LockVertexBuffer(vertexBuffer_));
 
+    char32_t previous = '\0';
+
     for (size_t i = 0; i < text.size(); i += utf8::u8_inc(text.data() + i))
     {
         char32_t codepoint = utf8::Utf8ToCodepoint(text.data() + i);
@@ -251,6 +257,8 @@ BmFont::UpdateVertexBufferResult BmFont::UpdateVertexBuffer(float x, float y, co
             core.Trace("Unsupported codepoint: %d", codepoint);
             continue;
         }
+
+        result.xoffset += static_cast<float>(GetKerning(previous, codepoint)) * scale;
 
         ++result.characters;
 
@@ -303,6 +311,8 @@ BmFont::UpdateVertexBufferResult BmFont::UpdateVertexBuffer(float x, float y, co
         }
 
         result.xoffset += static_cast<float>(character->xadvance) * scale;
+
+        previous = codepoint;
     }
 
     renderer_.UnLockVertexBuffer(vertexBuffer_);
@@ -310,15 +320,28 @@ BmFont::UpdateVertexBufferResult BmFont::UpdateVertexBuffer(float x, float y, co
     return result;
 }
 
-const BmCharacter *BmFont::GetCharacter(int32_t id) const
+const BmCharacter *BmFont::GetCharacter(char32_t id) const
 {
-    auto found = std::lower_bound(std::begin(characters_), std::end(characters_), id, [] (const BmCharacter &character, int32_t id) {
+    auto found = std::lower_bound(std::begin(characters_), std::end(characters_), id, [] (const BmCharacter &character, char32_t id) {
         return character.id < id;
     });
     if (found->id == id) {
         return &*found;
     }
     return nullptr;
+}
+
+int16_t BmFont::GetKerning(char32_t first, char32_t second) const
+{
+    auto found = std::lower_bound(std::begin(kerning_), std::end(kerning_), first, [] (const BmKerning &kerning, char32_t id) {
+        return kerning.first < id;
+    });
+    for(auto it = found; it < std::end(kerning_); ++it) {
+        if (found->second == second) {
+            return found->amount;
+        }
+    }
+    return 0;
 }
 
 } // namespace storm::bmfont
