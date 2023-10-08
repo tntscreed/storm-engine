@@ -59,5 +59,13 @@ jobs:
       with:
         name: storm-engine.${{ matrix.configuration }}
         path: build/default/${{ matrix.configuration }}
+    - name: Setup Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: '16'
+    - name: Upload debug symbols
+      run: |
+        npm install @sentry/cli
+        ./node_modules/.bin/sentry-cli --auth-token ${{ secrets.SENTRY_AUTH_TOKEN }} debug-files upload -o storm-devs -p storm-engine -t pe -t pdb "build\${{ matrix.configuration }}\bin"
 
 permissions: write-all
