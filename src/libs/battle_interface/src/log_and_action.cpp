@@ -326,7 +326,7 @@ void ILogAndActions::Create(bool bFastComShow, bool bLogStringShow)
         m_nWindowLeft = pA->GetAttributeAsDword("left", -1);
         m_nWindowRight = pA->GetAttributeAsDword("right", -1);
         m_nWindowUp = pA->GetAttributeAsDword("up", 0);
-        m_fontID = rs->LoadFont(pA->GetAttribute("font"));
+        m_fontID = rs->LoadFont(to_string(pA->GetAttribute("font")));
         m_fFontScale = pA->GetAttributeAsFloat("fontscale", 1.f);
         m_dwColor = pA->GetAttributeAsDword("color", 0x00FFFFFF);
         m_nStringOffset = pA->GetAttributeAsDword("offsetString", 24);

@@ -2,17 +2,18 @@
 
 #include "core.h"
 
+#include "debug-trap.h"
 #include "entity.h"
+#include "fs.h"
 #include "math_inlines.h"
 #include "s_import_func.h"
+#include "storm/font_loading.hpp"
+#include "string_compare.hpp"
 #include "texture.h"
 #include "v_s_stack.h"
-#include "fs.h"
-#include "debug-trap.h"
-#include "string_compare.hpp"
 
-#include <algorithm>
 #include <SDL_timer.h>
+#include <algorithm>
 
 #include <fmt/chrono.h>
 
@@ -413,7 +414,6 @@ DX9RENDER::DX9RENDER()
     aniVBuffer = nullptr;
     numAniVerteces = 0;
     pVTL = nullptr;
-    nFontQuantity = 0;
     idFontCurrent = 0;
     fontIniFileName = nullptr;
 
@@ -678,13 +678,6 @@ DX9RENDER::~DX9RENDER()
     delete progressTipsImage;
     progressTipsImage = nullptr;
 
-    for (int i = 0; i < nFontQuantity; i++)
-    {
-        delete FontList[i].font;
-
-        delete FontList[i].name;
-    }
-    nFontQuantity = 0;
     delete fontIniFileName;
 
     STORM_DELETE(DX9sphereVertex);
@@ -2799,7 +2792,7 @@ char Buff_4k[4096];
 int32_t DX9RENDER::Print(int32_t x, int32_t y, const char *format, ...)
 {
     // GUARD(DX9RENDER::Print)
-    if (idFontCurrent < 0 || idFontCurrent >= nFontQuantity)
+    if (idFontCurrent < 0 || idFontCurrent >= FontList.size())
         return 0;
     if (FontList[idFontCurrent].font == nullptr || FontList[idFontCurrent].ref == 0)
         return 0;
@@ -2809,14 +2802,14 @@ int32_t DX9RENDER::Print(int32_t x, int32_t y, const char *format, ...)
     vsnprintf(Buff_4k, sizeof(Buff_4k), format, args);
     va_end(args);
 
-    return FontList[idFontCurrent].font->Print(x, y, Buff_4k);
+    return FontList[idFontCurrent].font->Print(static_cast<float>(x), static_cast<float>(y), Buff_4k).value_or(0);
     // UNGUARD
 }
 
 int32_t DX9RENDER::Print(int32_t nFontNum, uint32_t color, int32_t x, int32_t y, const char *format, ...)
 {
     // GUARD(DX9RENDER::Print)
-    if (nFontNum < 0 || nFontNum >= nFontQuantity)
+    if (nFontNum < 0 || nFontNum >= FontList.size())
         return 0;
     if (FontList[nFontNum].font == nullptr || FontList[nFontNum].ref == 0)
         return 0;
@@ -2826,7 +2819,7 @@ int32_t DX9RENDER::Print(int32_t nFontNum, uint32_t color, int32_t x, int32_t y,
     vsnprintf(Buff_4k, sizeof(Buff_4k), format, args);
     va_end(args);
 
-    const int32_t retVal = FontList[nFontNum].font->Print(x, y, Buff_4k, {.color = color});
+    const int32_t retVal = FontList[nFontNum].font->Print(static_cast<float>(x), static_cast<float>(y), Buff_4k, {.color = color}).value_or(0);
     return retVal;
     // UNGUARD
 }
@@ -2842,9 +2835,9 @@ int32_t DX9RENDER::StringWidth(const char *string, int32_t nFontNum, float fScal
 
 int32_t DX9RENDER::StringWidth(const std::string_view &string, int32_t nFontNum, float fScale, int32_t scrWidth)
 {
-    if (nFontNum < 0 || nFontNum >= nFontQuantity)
+    if (nFontNum < 0 || nFontNum >= FontList.size())
         return 0;
-    FONT *pFont = FontList[nFontNum].font;
+    const auto &pFont = FontList[nFontNum].font;
     if (FontList[nFontNum].ref == 0 || pFont == nullptr)
         return 0;
 
@@ -2854,7 +2847,7 @@ int32_t DX9RENDER::StringWidth(const std::string_view &string, int32_t nFontNum,
         scrWidth = xs;
     if (xs != scrWidth)
         fScale *= static_cast<float>(xs) / scrWidth;
-    const int32_t retVal = pFont->GetStringWidth(string, fScale);
+    const int32_t retVal = pFont->GetStringWidth(string, {.scale = fScale});
     return retVal;
 }
 
@@ -2866,7 +2859,7 @@ int32_t DX9RENDER::CharWidth(utf8::u8_char ch, int32_t nFontNum, float fScale, i
 
 int32_t DX9RENDER::CharHeight(int32_t fontID)
 {
-    if (fontID < 0 || fontID >= nFontQuantity)
+    if (fontID < 0 || fontID >= FontList.size())
         return 0;
     if (FontList[fontID].ref == 0 || FontList[fontID].font == nullptr)
         return 0;
@@ -2879,9 +2872,9 @@ int32_t DX9RENDER::ExtPrint(int32_t nFontNum, uint32_t foreColor, uint32_t backC
 {
     // GUARD(DX9RENDER::ExtPrint)
 
-    if (nFontNum < 0 || nFontNum >= nFontQuantity)
+    if (nFontNum < 0 || nFontNum >= FontList.size())
         return 0;
-    FONT *pFont = FontList[nFontNum].font;
+    const auto &pFont = FontList[nFontNum].font;
     if (FontList[nFontNum].ref == 0 || pFont == nullptr)
         return 0;
 
@@ -2920,68 +2913,56 @@ int32_t DX9RENDER::ExtPrint(int32_t nFontNum, uint32_t foreColor, uint32_t backC
         break;
     }
 
-    const int32_t retVal = pFont->Print(x, y, Buff_4k,
+    const int32_t retVal = pFont->Print(static_cast<float>(x), static_cast<float>(y), Buff_4k,
                                         {
                                             .scale = fScale,
                                             .color = foreColor,
                                             .shadow = bShadow,
-                                        });
+                                        }).value_or(0);
     return retVal;
     // UNGUARD
 }
 
-int32_t DX9RENDER::LoadFont(const char *fontName)
+int32_t DX9RENDER::LoadFont(const std::string_view &fontName)
 {
-    if (fontName == nullptr)
-        return -1L;
-    char sDup[256];
-    if (strlen(fontName) < sizeof(sDup) - 1)
-        strcpy_s(sDup, fontName);
-    else
-    {
-        strncpy_s(sDup, fontName, sizeof(sDup) - 1);
-        sDup[sizeof(sDup) - 1] = 0;
-    }
-
-    std::ranges::for_each(sDup, [](char &c) { c = std::toupper(c); });
-    fontName = sDup;
+    const auto sDup = std::string(fontName);
 
     const uint32_t hashVal = MakeHashValue(fontName);
 
     int32_t i;
-    for (i = 0; i < nFontQuantity; i++)
-        if (FontList[i].hash == hashVal && storm::iEquals(FontList[i].name, fontName))
-        {
-            if (FontList[i].ref > 0)
-                FontList[i].ref++;
-            else
-            {
-                FontList[i].ref = 1;
-                FontList[i].font->RepeatInit();
-            }
-            return i;
-        }
-    if (nFontQuantity < MAX_FONTS)
+
+    auto existing_font = std::find_if(std::begin(FontList), std::end(FontList), [&] (FONTEntity &font) {
+        return font.hash == hashVal && storm::iEquals(font.name, fontName);
+    });
+     if (existing_font != std::end(FontList))
     {
-        if ((FontList[i].font = new FONT(*this, *d3d9)) == nullptr)
-            throw std::runtime_error("allocate memory error");
-        if (!FontList[i].font->Init(fontName, fontIniFileName))
+        if (existing_font->ref > 0)
+            existing_font->ref++;
+        else
         {
-            delete FontList[i].font;
-            core.Trace("Can't init font %s", fontName);
+            existing_font->ref = 1;
+            existing_font->font->RepeatInit();
+        }
+        return std::distance(std::begin(FontList), existing_font);
+    }
+    else {
+        if (FontList.size() >= MAX_FONTS) {
+            throw std::runtime_error("maximal font quantity exceeded");
+        }
+
+        auto font = storm::LoadFont(fontName, fontIniFileName, *this, *d3d9);
+        if (font == nullptr) {
+            core.Trace("Can't load font %s", sDup.c_str());
             return -1L;
         }
-        FontList[i].hash = hashVal;
-        FontList[i].ref = 1;
-        const auto len = strlen(fontName) + 1;
-        if ((FontList[i].name = new char[len]) == nullptr)
-            throw std::runtime_error("allocate memory error");
-        strcpy_s(FontList[i].name, len, fontName);
-        nFontQuantity++;
+        FontList.emplace_back(FONTEntity{
+            sDup,
+            hashVal,
+            std::move(font),
+            1,
+        });
+        return FontList.size() - 1;
     }
-    else
-        throw std::runtime_error("maximal font quantity exceeded");
-    return i;
 }
 
 bool DX9RENDER::UnloadFont(const char *fontName)
@@ -3000,7 +2981,7 @@ bool DX9RENDER::UnloadFont(const char *fontName)
     fontName = sDup;
     const uint32_t hashVal = MakeHashValue(fontName);
 
-    for (int i = 0; i < nFontQuantity; i++)
+    for (int i = 0; i < FontList.size(); i++)
         if (FontList[i].hash == hashVal && storm::iEquals(FontList[i].name, fontName))
             return UnloadFont(i);
     core.Trace("Font name \"%s\" is not containing", fontName);
@@ -3009,7 +2990,7 @@ bool DX9RENDER::UnloadFont(const char *fontName)
 
 bool DX9RENDER::UnloadFont(int32_t fontID)
 {
-    if (fontID < 0 || fontID >= nFontQuantity)
+    if (fontID < 0 || fontID >= FontList.size())
         return false;
 
     if (FontList[fontID].ref > 0)
@@ -3030,7 +3011,7 @@ bool DX9RENDER::UnloadFont(int32_t fontID)
 
 bool DX9RENDER::IncRefCounter(int32_t fontID)
 {
-    if (fontID < 0 || fontID >= nFontQuantity)
+    if (fontID < 0 || fontID >= FontList.size())
         return false;
 
     FontList[fontID].ref++;
@@ -3054,7 +3035,7 @@ bool DX9RENDER::SetCurFont(const char *fontName)
     fontName = sDup;
     const uint32_t hashVal = MakeHashValue(fontName);
 
-    for (int i = 0; i < nFontQuantity; i++)
+    for (int i = 0; i < FontList.size(); i++)
         if (FontList[i].hash == hashVal)
         {
             idFontCurrent = i;
@@ -3066,7 +3047,7 @@ bool DX9RENDER::SetCurFont(const char *fontName)
 
 bool DX9RENDER::SetCurFont(int32_t fontID)
 {
-    if (fontID < 0 || fontID >= nFontQuantity)
+    if (fontID < 0 || fontID >= FontList.size())
         return false;
     idFontCurrent = fontID;
     return true;
@@ -3074,7 +3055,7 @@ bool DX9RENDER::SetCurFont(int32_t fontID)
 
 int32_t DX9RENDER::GetCurFont()
 {
-    if (idFontCurrent >= 0 && idFontCurrent < nFontQuantity)
+    if (idFontCurrent >= 0 && idFontCurrent < FontList.size())
         return idFontCurrent;
     return -1L;
 }
@@ -3100,13 +3081,15 @@ bool DX9RENDER::SetFontIniFileName(const char *iniName)
         throw std::runtime_error("allocate memory error");
     strcpy_s(fontIniFileName, len, iniName);
 
-    for (int n = 0; n < nFontQuantity; n++)
+    for (int n = 0; n < FontList.size(); n++)
     {
-        delete FontList[n].font;
-
-        if ((FontList[n].font = new FONT(*this, *d3d9)) == nullptr)
-            throw std::runtime_error("allocate memory error");
-        FontList[n].font->Init(FontList[n].name, fontIniFileName);
+        const std::string font_name = FontList[n].name;
+        FontList[n].font = storm::LoadFont(font_name, fontIniFileName, *this, *d3d9);
+        if (FontList[n].font == nullptr)
+        {
+            core.Trace("Can't reload font %s", font_name.c_str());
+            return false;
+        }
         if (FontList[n].ref == 0)
             FontList[n].font->TempUnload();
     }
