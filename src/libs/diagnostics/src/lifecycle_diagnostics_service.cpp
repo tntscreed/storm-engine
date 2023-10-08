@@ -199,7 +199,7 @@ LifecycleDiagnosticsService::Guard LifecycleDiagnosticsService::initialize(const
         sentry_options_set_debug(options, true);
 #endif
         sentry_options_set_logger(options, log_sentry, nullptr);
-        sentry_options_set_dsn(options, "https://1798a1bcfb654cbd8ce157b381964525@o572138.ingest.sentry.io/5721165");
+        sentry_options_set_dsn(options, "https://8ae9220bf1ee1d13a6b3bfe1fe1c8894@o4506010910654464.ingest.sentry.io/4506010914652160");
         sentry_options_set_release(options, STORM_BUILD_WATERMARK_STRING);
         sentry_options_set_database_path(options, (fs::GetStashPath() / "sentry-db").c_str());
 #ifdef _WIN32
