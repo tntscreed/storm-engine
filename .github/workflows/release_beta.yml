@@ -56,4 +56,4 @@ jobs:
     - name: Upload debug symbols
       run: |
         npm install @sentry/cli
-        ./node_modules/.bin/sentry-cli --auth-token ${{ secrets.SENTRY_AUTH_TOKEN }} upload-dif -o storm-devs -p storm-engine -t pe -t pdb "build\${{ matrix.configuration }}\bin"
+        ./node_modules/.bin/sentry-cli --auth-token ${{ secrets.SENTRY_AUTH_TOKEN }} upload-dif -o piratesahoy -p storm-engine -t pe -t pdb "build\${{ matrix.configuration }}\bin"
