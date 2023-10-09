@@ -260,8 +260,6 @@ BmFont::UpdateVertexBufferResult BmFont::UpdateVertexBuffer(float x, float y, co
 
         result.xoffset += static_cast<float>(GetKerning(previous, codepoint)) * scale;
 
-        ++result.characters;
-
         FLOAT_RECT pos {
             result.xoffset + (static_cast<float>(character->xoffset)) * scale,
             y + (static_cast<float>(character->yoffset)) * scale,
@@ -269,7 +267,9 @@ BmFont::UpdateVertexBufferResult BmFont::UpdateVertexBuffer(float x, float y, co
             y + (static_cast<float>(character->yoffset + character->height)) * scale,
         };
 
-        BMFONT_CHAR_VERTEX *verts = vertices + i * 6;
+        BMFONT_CHAR_VERTEX *verts = vertices + result.characters * 6;
+        ++result.characters;
+
         verts[0].pos.x = pos.x1;
         verts[1].pos.x = pos.x1;
         verts[2].pos.x = pos.x2;
