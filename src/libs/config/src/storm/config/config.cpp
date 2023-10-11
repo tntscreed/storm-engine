@@ -1,4 +1,5 @@
-#include "storm/config.hpp"
+#include "storm/config/config.hpp"
+#include "v_file_service.h"
 
 namespace storm
 {
@@ -95,8 +96,11 @@ std::optional<toml::table> LoadConfig(const std::filesystem::path &file_path)
         return toml::parse_file(path.string());
     }
     case Ini: {
-        // TODO
-        return {};
+        const std::string path_str = path.string();
+        const auto ini = fio->OpenIniFile(path_str.c_str());
+        if (ini == nullptr)
+            return {};
+        return ini->ToToml();
     }
     default:
         return {};

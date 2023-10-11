@@ -1142,3 +1142,34 @@ bool IFS::Reload()
     SectionSNode = nullptr;
     return LoadFile(FileName);
 }
+
+toml::table IFS::ToToml()
+{
+    toml::table result;
+
+    auto *section_node = SectionRoot;
+    while (section_node)
+    {
+        const bool in_section = section_node->GetName() != nullptr;
+        if (in_section) {
+            result.emplace(section_node->GetName(), toml::table());
+        }
+        toml::table& section = in_section ? result[section_node->GetName()].ref<toml::table>() : result;
+        auto *node = section_node->GetRoot();
+        while (node)
+        {
+            const auto flags = node->SetFlags(0);
+            if (flags & KNF_KEY)
+            {
+                if (node->GetValue() != nullptr)
+                {
+                    section.emplace(node->GetName(), std::string(node->GetValue()));
+                }
+            }
+            node = node->GetRightNode();
+        }
+        section_node = section_node->GetRightNode();
+    }
+
+    return result;
+}

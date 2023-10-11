@@ -1,6 +1,6 @@
 #include "config_library.hpp"
 
-#include "storm/config.hpp"
+#include "storm/config/config.hpp"
 
 #include <core.h>
 #include <istring.hpp>
