@@ -1,6 +1,7 @@
 #pragma once
 
 #include <filesystem>
+#include <optional>
 
 #ifdef _WIN32 // SHGetKnownFolderPath
 #include <ShlObj.h>
