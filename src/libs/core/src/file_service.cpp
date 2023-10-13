@@ -695,3 +695,8 @@ bool INIFILE_T::TestSection(const char *section_name)
 {
     return ifs_PTR->TestSection(section_name);
 };
+
+toml::table INIFILE_T::ToToml()
+{
+    return ifs_PTR->ToToml();
+}

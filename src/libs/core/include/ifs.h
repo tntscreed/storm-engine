@@ -181,4 +181,6 @@ class IFS : public INIFILE
     void Flush() override;
     bool Reload() override;
     bool TestSection(const char *section_name) override;
+
+    toml::table ToToml() override;
 };

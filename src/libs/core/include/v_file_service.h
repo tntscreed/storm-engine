@@ -1,5 +1,7 @@
 #pragma once
 
+#include <toml++/toml.h>
+
 #include <cstdint>
 #include <filesystem>
 #include <fstream>
@@ -140,6 +142,8 @@ class INIFILE
     virtual bool Reload() = 0;
     virtual bool CaseSensitive(bool yes) = 0;
     virtual bool TestSection(const char *section_name) = 0;
+
+    virtual toml::table ToToml() = 0;
 };
 
 //

@@ -77,6 +77,8 @@ class INIFILE_T : public INIFILE
     bool CaseSensitive(bool v) override;
 
     bool TestSection(const char *section_name) override;
+
+    toml::table ToToml() override;
 };
 
 class FILE_SERVICE : public VFILE_SERVICE
