@@ -29,7 +29,12 @@ std::unique_ptr<VFont> LoadFont(const std::string_view &font_name,
         core.Trace(msg.c_str());
         std::string fnt_path = *section->at("file").value<std::string>();
         auto result = std::make_unique<bmfont::BmFont>(fnt_path, renderer);
-        result->SetScale(section->at("pcscale").value_or<double>(1));
+        const auto &scale = section->at("pcscale");
+        if (scale.is_string()) {
+            result->SetScale(std::stod(scale.value_or<std::string>("")));
+        } else if (scale.is_number()) {
+            result->SetScale(scale.value_or<double>(1));
+        }
         return result;
     }
     else {

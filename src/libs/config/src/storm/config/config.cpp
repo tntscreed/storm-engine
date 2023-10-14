@@ -67,11 +67,11 @@ std::optional<FindConfigResult> FindConfigFile(const std::filesystem::path &sour
         {
             continue;
         }
-        const std::filesystem::path test_path = GetConfigFilePath(source_path, preferred_format);
+        const std::filesystem::path test_path = GetConfigFilePath(source_path, format);
         if (exists(test_path))
         {
             return FindConfigResult{
-                preferred_format,
+                format,
                 test_path,
             };
         }
