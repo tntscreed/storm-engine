@@ -1,6 +1,7 @@
 #include "legacy_dialog.hpp"
 
 #include "dialog.hpp"
+#include "storm/config/config.hpp"
 #include <dialog/dialog_utils.hpp>
 
 #include <animation.h>
@@ -19,20 +20,14 @@ CREATE_CLASS(LegacyDialog)
 namespace
 {
 
-constexpr std::string_view DIALOG_INI_FILE_PATH = "Resource/Ini/dialog.ini";
+constexpr std::string_view DIALOG_INI_FILE_PATH = "Resource/Ini/dialog";
+constexpr std::string_view DEFAULT_FONT = "DIALOG0";
 const char *DEFAULT_INTERFACE_TEXTURE = "dialog/dialog.tga";
 
 constexpr const uint32_t COLOR_NORMAL = 0xFFFFFFFF;
 constexpr const uint32_t COLOR_LINK_UNSELECTED = ARGB(255, 127, 127, 127);
 
 constexpr const uint32_t UNFADE_TIME = 1000;
-
-int32_t LoadFont(const std::string_view &fontName, INIFILE &ini, VDX9RENDER &renderService)
-{
-    std::array<char, MAX_PATH> string_buffer{};
-    ini.ReadString("DIALOG", fontName.data(), string_buffer.data(), string_buffer.size(), "DIALOG0");
-    return renderService.LoadFont(string_buffer.data());
-}
 
 void FillIndexBuffer(VDX9RENDER &renderService, int32_t indexBuffer, size_t spriteCount)
 {
@@ -226,7 +221,7 @@ void LegacyDialog::Realize(uint32_t deltaTime)
 
     if (!characterName_.empty())
     {
-        RenderService->ExtPrint(nameFont_, COLOR_NORMAL, 0, PR_ALIGN_LEFT, true, fontScale_, 0, 0,
+        RenderService->ExtPrint(nameFont_, nameColor_, 0, PR_ALIGN_LEFT, true, fontScale_, 0, 0,
                                 static_cast<int32_t>(screenScale_.x * 168), static_cast<int32_t>(screenScale_.y * 28),
                                 characterName_.c_str());
     }
@@ -308,13 +303,24 @@ uint64_t LegacyDialog::ProcessMessage(MESSAGE &msg)
 
 void LegacyDialog::LoadIni()
 {
-    auto ini = fio->OpenIniFile(DIALOG_INI_FILE_PATH.data());
+    const auto opt_config = storm::LoadConfig(DIALOG_INI_FILE_PATH);
 
-    mainFont_ = LoadFont("mainfont", *ini, *RenderService);
-    nameFont_ = LoadFont("namefont", *ini, *RenderService);
-    subFont_ = LoadFont("subfont", *ini, *RenderService);
+    if (opt_config) {
+        const auto &config = *opt_config;
 
-    ini.reset();
+        const auto &dialog = config["dialog"];
+        if (dialog.is_table()) {
+            mainFont_ = RenderService->LoadFont(dialog["mainfont"].value_or<std::string>(std::string(DEFAULT_FONT)));
+            nameFont_ = RenderService->LoadFont(dialog["namefont"].value_or<std::string>(std::string(DEFAULT_FONT)));
+            nameColor_ = storm::config::GetColor(dialog.at_path("name.color")).value_or(COLOR_NORMAL);
+            subFont_ = RenderService->LoadFont(dialog["subfont"].value_or<std::string>(std::string(DEFAULT_FONT)));
+        }
+    }
+    else {
+        mainFont_ = RenderService->LoadFont(DEFAULT_FONT);
+        nameFont_ = mainFont_;
+        subFont_ = mainFont_;
+    }
 }
 
 void LegacyDialog::UpdateScreenSize()

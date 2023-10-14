@@ -107,4 +107,29 @@ std::optional<toml::table> LoadConfig(const std::filesystem::path &file_path)
     }
 }
 
+namespace config {
+
+std::optional<uint32_t> GetColor(const toml::node_view<const toml::node> &node)
+{
+    if (node.is_integer()) {
+        return node.value<uint32_t>();
+    }
+    else if (node.is_string()) {
+        const std::string value = *node.value<std::string>();
+        if (value.starts_with('#') && value.length() == 7) {
+            const auto code = std::string_view(value.begin() + 1, value.end());
+            uint32_t result;
+            const char *first = code.data();
+            const char *last = first + code.length();
+            const auto parse_result = std::from_chars(first, last, result, 16);
+            if (parse_result.ptr == last) {
+                return result | 0xff000000;
+            }
+        }
+    }
+    return {};
+}
+
+} // namespace config
+
 } // namespace storm

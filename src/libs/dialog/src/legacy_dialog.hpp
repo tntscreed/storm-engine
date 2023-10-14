@@ -88,6 +88,7 @@ class LegacyDialog final : public Entity
 
     int32_t mainFont_{};
     int32_t nameFont_{};
+    int32_t nameColor_{};
     int32_t subFont_{};
 
     int32_t interfaceTexture_{};

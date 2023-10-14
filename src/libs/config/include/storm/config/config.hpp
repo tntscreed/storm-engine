@@ -21,4 +21,10 @@ struct FindConfigResult
 
 [[nodiscard]] std::optional<toml::table> LoadConfig(const std::filesystem::path &file_path);
 
+namespace config {
+
+std::optional<uint32_t> GetColor(const toml::node_view<const toml::node> &node);
+
+} // namespace config
+
 } // namespace storm
