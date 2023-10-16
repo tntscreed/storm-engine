@@ -26,7 +26,6 @@ Lighter::Lighter()
     rs = nullptr;
     initCounter = 10;
     isInited = false;
-    waitChange = 0.0f;
 }
 
 Lighter::~Lighter()
@@ -88,24 +87,22 @@ void Lighter::Execute(uint32_t delta_time)
         window.Reset(true);
         PreparingData();
     }
-    if (waitChange <= 0.0f)
+
+    CONTROL_STATE cs;
+    core.Controls->GetControlState("LighterToggle", cs);
+
+    if (cs.state == CST_ACTIVATED)
     {
-        if (core.Controls->GetAsyncKeyState(VK_NUMPAD0) < 0)
+        if (isInited)
         {
-            waitChange = 0.5f;
-            if (isInited)
-            {
-                window.Reset(!window.isVisible);
-            }
-            else
-            {
-                window.isNeedInit = true;
-                isInited = true;
-            }
+            window.Reset(!window.isVisible);
+        }
+        else
+        {
+            window.isNeedInit = true;
+            isInited = true;
         }
     }
-    else
-        waitChange -= dltTime;
 }
 
 void Lighter::PreparingData()
