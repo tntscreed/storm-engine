@@ -309,11 +309,13 @@ void LegacyDialog::LoadIni()
         const auto &config = *opt_config;
 
         const auto &dialog = config["dialog"];
-        if (dialog.is_table()) {
-            mainFont_ = RenderService->LoadFont(dialog["mainfont"].value_or<std::string>(std::string(DEFAULT_FONT)));
-            nameFont_ = RenderService->LoadFont(dialog["namefont"].value_or<std::string>(std::string(DEFAULT_FONT)));
-            nameColor_ = storm::config::GetColor(dialog.at_path("name.color")).value_or(COLOR_NORMAL);
-            subFont_ = RenderService->LoadFont(dialog["subfont"].value_or<std::string>(std::string(DEFAULT_FONT)));
+        if (dialog.is_object()) {
+            mainFont_ = RenderService->LoadFont(dialog.value<std::string>("mainfont", std::string(DEFAULT_FONT)));
+            nameFont_ = RenderService->LoadFont(dialog.value<std::string>("namefont", std::string(DEFAULT_FONT)));
+            if (dialog.contains("name")) {
+                nameColor_ = storm::config::GetColor(dialog["name"]["color"]).value_or(COLOR_NORMAL);
+            }
+            subFont_ = RenderService->LoadFont(dialog.value<std::string>("subfont", std::string(DEFAULT_FONT)));
         }
     }
     else {

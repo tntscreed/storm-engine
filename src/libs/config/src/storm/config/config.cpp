@@ -46,6 +46,57 @@ std::string_view GetConfigFileExtension(ConfigFormat format)
     return directory / (stem.string() + std::string(GetConfigFileExtension(format)));
 }
 
+Config::object_t ConvertTable(const toml::table &toml);
+Config::array_t ConvertArray(const toml::array &array);
+
+Config::value_type ConvertValue(const toml::node &toml)
+{
+    if (toml.is_string()) {
+        return **toml.as_string();
+    }
+    else if (toml.is_boolean()) {
+        return **toml.as_boolean();
+    }
+    else if (toml.is_integer()) {
+        return **toml.as_integer();
+    }
+    else if (toml.is_floating_point()) {
+        return **toml.as_floating_point();
+    }
+    else if (toml.is_array()) {
+        return ConvertArray(*toml.as_array());
+    }
+    else if (toml.is_table()) {
+        return ConvertTable(*toml.as_table());
+    }
+    return {};
+}
+
+Config::array_t ConvertArray(const toml::array &array)
+{
+    Config::array_t result;
+    for (const auto &value : array) {
+        result.push_back(ConvertValue(value));
+    }
+    return result;
+}
+
+Config::object_t ConvertTable(const toml::table &toml)
+{
+    Config::object_t result;
+    for (const auto &entry : toml) {
+        const auto &key = std::string(entry.first);
+        const auto &value = entry.second;
+        result[key] = ConvertValue(value);
+    }
+    return result;
+}
+
+Config ToConfig(const toml::table &toml)
+{
+    return ConvertValue(toml);
+}
+
 } // namespace
 
 std::optional<FindConfigResult> FindConfigFile(const std::filesystem::path &source_path)
@@ -80,7 +131,7 @@ std::optional<FindConfigResult> FindConfigFile(const std::filesystem::path &sour
     return {};
 }
 
-std::optional<toml::table> LoadConfig(const std::filesystem::path &file_path)
+std::optional<Config> LoadConfig(const std::filesystem::path &file_path)
 {
     auto found_config = FindConfigFile(file_path);
     if (!found_config)
@@ -93,14 +144,15 @@ std::optional<toml::table> LoadConfig(const std::filesystem::path &file_path)
     switch (format)
     {
     case Toml: {
-        return toml::parse_file(path.string());
+        return ToConfig(toml::parse_file(path.string()));
     }
     case Ini: {
         const std::string path_str = path.string();
         const auto ini = fio->OpenIniFile(path_str.c_str());
         if (ini == nullptr)
             return {};
-        return ini->ToToml();
+        return ToConfig(ini->ToToml());
+        return {};
     }
     default:
         return {};
@@ -109,13 +161,13 @@ std::optional<toml::table> LoadConfig(const std::filesystem::path &file_path)
 
 namespace config {
 
-std::optional<uint32_t> GetColor(const toml::node_view<const toml::node> &node)
+std::optional<uint32_t> GetColor(const storm::Config &node)
 {
-    if (node.is_integer()) {
-        return node.value<uint32_t>();
+    if (node.is_number_integer()) {
+        return node.get<uint32_t>();
     }
     else if (node.is_string()) {
-        const std::string value = *node.value<std::string>();
+        const auto value = node.get<std::string>();
         if (value.starts_with('#') && value.length() == 7) {
             const auto code = std::string_view(value.begin() + 1, value.end());
             uint32_t result;

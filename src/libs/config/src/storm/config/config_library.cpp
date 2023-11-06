@@ -16,30 +16,29 @@ using Config = ConfigLibrary;
 
 CREATE_SCRIPTLIBRIARY(Config)
 
-void ConvertTable(ATTRIBUTES *target, const toml::table &table, entid_t entity_id);
+void ConvertTable(ATTRIBUTES *target, const storm::Config &table, entid_t entity_id);
 
-void ConvertValue(ATTRIBUTES *target, const std::string &key, const toml::node &node, entid_t entity_id)
+void ConvertValue(ATTRIBUTES *target, const std::string &key, const storm::Config &node, entid_t entity_id)
 {
     if (node.is_array())
     {
-        const auto *array = node.as_array();
         ATTRIBUTES *new_element = target->VerifyAttributeClass(key);
         size_t offset = 0;
-        array->for_each([&](size_t index, auto &&el) {
-            while(new_element->HasAttribute(std::to_string(offset + index))) {
+        std::for_each(node.begin(), node.end(), [&](auto &&el) {
+            while(new_element->HasAttribute(std::to_string(offset))) {
                 ++offset;
             }
-            std::string index_key = std::to_string(offset + index);
+            std::string index_key = std::to_string(offset);
             ConvertValue(new_element, index_key, el, entity_id);
         });
     }
-    else if (node.is_table())
+    else if (node.is_object())
     {
-        ConvertTable(target->VerifyAttributeClass(key), *node.as_table(), entity_id);
+        ConvertTable(target->VerifyAttributeClass(key), node, entity_id);
     }
     else if (node.is_string())
     {
-        std::string str = node.value_or<std::string>("");
+        std::string str = node;
         if (key == "__value__")
         {
             target->SetValue(str);
@@ -54,16 +53,16 @@ void ConvertValue(ATTRIBUTES *target, const std::string &key, const toml::node &
             target->SetAttribute(key, str);
         }
     }
-    else if (node.is_floating_point())
+    else if (node.is_number_float())
     {
-        target->SetAttributeUseFloat(key.c_str(), node.value_or<float>(0));
+        target->SetAttributeUseFloat(key.c_str(), node.get<float>());
     }
-    else if (node.is_integer())
+    else if (node.is_number_integer())
     {
-        target->SetAttributeUseDword(key.c_str(), node.value_or<uint32_t>(0));
+        target->SetAttributeUseDword(key.c_str(), node.get<uint32_t>());
     }
     else if (node.is_boolean()) {
-        target->SetAttribute(key, node.value_or<bool>(false) ? "1" : "0");
+        target->SetAttribute(key, node.get<bool>() ? "1" : "0");
     }
     ATTRIBUTES *updated_attr = target->GetAttributeClass(key);
     if (entity_id != invalid_entity && updated_attr != nullptr)
@@ -72,11 +71,11 @@ void ConvertValue(ATTRIBUTES *target, const std::string &key, const toml::node &
     }
 }
 
-void ConvertTable(ATTRIBUTES *target, const toml::table &table, entid_t entity_id)
+void ConvertTable(ATTRIBUTES *target, const storm::Config &config, entid_t entity_id)
 {
-    for (const auto &[key, value] : table)
+    for (const auto &[key, value] : config.items())
     {
-        ConvertValue(target, std::string(key), value, entity_id);
+        ConvertValue(target, key, value, entity_id);
     }
 }
 
