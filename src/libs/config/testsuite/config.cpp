@@ -6,7 +6,7 @@ using namespace storm;
 
 TEST_CASE("Case insensitive keys", "[config]")
 {
-    Config config;
+    Data config;
     config["Key"] = 5;
 
     CHECK(config.contains("key"));
