@@ -1,6 +1,6 @@
 #pragma once
 
-#include <toml++/toml.h>
+#include "storm/data.hpp"
 
 #include <cstdint>
 #include <filesystem>
@@ -143,7 +143,7 @@ class INIFILE
     virtual bool CaseSensitive(bool yes) = 0;
     virtual bool TestSection(const char *section_name) = 0;
 
-    virtual toml::table ToToml() = 0;
+    virtual storm::Data ToData() = 0;
 };
 
 //

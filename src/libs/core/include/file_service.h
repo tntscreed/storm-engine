@@ -78,7 +78,7 @@ class INIFILE_T : public INIFILE
 
     bool TestSection(const char *section_name) override;
 
-    toml::table ToToml() override;
+    storm::Data ToData() override;
 };
 
 class FILE_SERVICE : public VFILE_SERVICE

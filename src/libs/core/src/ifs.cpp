@@ -1143,18 +1143,18 @@ bool IFS::Reload()
     return LoadFile(FileName);
 }
 
-toml::table IFS::ToToml()
+storm::Data IFS::ToData()
 {
-    toml::table result;
+    storm::Data result;
 
     auto *section_node = SectionRoot;
     while (section_node)
     {
         const bool in_section = section_node->GetName() != nullptr;
         if (in_section) {
-            result.emplace(section_node->GetName(), toml::table());
+            result.emplace(section_node->GetName(), storm::Data{});
         }
-        toml::table& section = in_section ? result[section_node->GetName()].ref<toml::table>() : result;
+        auto& section = in_section ? result[section_node->GetName()] : result;
         auto *node = section_node->GetRoot();
         while (node)
         {

@@ -46,10 +46,10 @@ std::string_view GetConfigFileExtension(ConfigFormat format)
     return directory / (stem.string() + std::string(GetConfigFileExtension(format)));
 }
 
-Config::object_t ConvertTable(const toml::table &toml);
-Config::array_t ConvertArray(const toml::array &array);
+Data::object_t ConvertTable(const toml::table &toml);
+Data::array_t ConvertArray(const toml::array &array);
 
-Config::value_type ConvertValue(const toml::node &toml)
+Data::value_type ConvertValue(const toml::node &toml)
 {
     if (toml.is_string()) {
         return **toml.as_string();
@@ -72,18 +72,18 @@ Config::value_type ConvertValue(const toml::node &toml)
     return {};
 }
 
-Config::array_t ConvertArray(const toml::array &array)
+Data::array_t ConvertArray(const toml::array &array)
 {
-    Config::array_t result;
+    Data::array_t result;
     for (const auto &value : array) {
         result.push_back(ConvertValue(value));
     }
     return result;
 }
 
-Config::object_t ConvertTable(const toml::table &toml)
+Data::object_t ConvertTable(const toml::table &toml)
 {
-    Config::object_t result;
+    Data::object_t result;
     for (const auto &entry : toml) {
         const auto &key = std::string(entry.first);
         const auto &value = entry.second;
@@ -92,7 +92,7 @@ Config::object_t ConvertTable(const toml::table &toml)
     return result;
 }
 
-Config ToConfig(const toml::table &toml)
+Data ToConfig(const toml::table &toml)
 {
     return ConvertValue(toml);
 }
@@ -131,7 +131,7 @@ std::optional<FindConfigResult> FindConfigFile(const std::filesystem::path &sour
     return {};
 }
 
-std::optional<Config> LoadConfig(const std::filesystem::path &file_path)
+std::optional<Data> LoadConfig(const std::filesystem::path &file_path)
 {
     auto found_config = FindConfigFile(file_path);
     if (!found_config)
@@ -151,8 +151,7 @@ std::optional<Config> LoadConfig(const std::filesystem::path &file_path)
         const auto ini = fio->OpenIniFile(path_str.c_str());
         if (ini == nullptr)
             return {};
-        return ToConfig(ini->ToToml());
-        return {};
+        return ini->ToData();
     }
     default:
         return {};
@@ -161,7 +160,7 @@ std::optional<Config> LoadConfig(const std::filesystem::path &file_path)
 
 namespace config {
 
-std::optional<uint32_t> GetColor(const storm::Config &node)
+std::optional<uint32_t> GetColor(const storm::Data &node)
 {
     if (node.is_number_integer()) {
         return node.get<uint32_t>();

@@ -16,9 +16,9 @@ using Config = ConfigLibrary;
 
 CREATE_SCRIPTLIBRIARY(Config)
 
-void ConvertTable(ATTRIBUTES *target, const storm::Config &table, entid_t entity_id);
+void ConvertTable(ATTRIBUTES *target, const storm::Data &table, entid_t entity_id);
 
-void ConvertValue(ATTRIBUTES *target, const std::string &key, const storm::Config &node, entid_t entity_id)
+void ConvertValue(ATTRIBUTES *target, const std::string &key, const storm::Data &node, entid_t entity_id)
 {
     if (node.is_array())
     {
@@ -71,7 +71,7 @@ void ConvertValue(ATTRIBUTES *target, const std::string &key, const storm::Confi
     }
 }
 
-void ConvertTable(ATTRIBUTES *target, const storm::Config &config, entid_t entity_id)
+void ConvertTable(ATTRIBUTES *target, const storm::Data &config, entid_t entity_id)
 {
     for (const auto &[key, value] : config.items())
     {
