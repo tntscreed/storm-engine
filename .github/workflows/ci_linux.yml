@@ -36,6 +36,10 @@ jobs:
         configuration: [Debug]
     name: 'linux [${{ matrix.configuration}}]'
     steps:
+    # Workaround for C++20 build issues
+    - uses: mjp41/workaround8649@7929373c0fe5caf844d8115adccef39e3b5362e7
+      with:
+        os: ubuntu-latest
     - uses: actions/checkout@v2
       with:
         submodules: 'recursive'
