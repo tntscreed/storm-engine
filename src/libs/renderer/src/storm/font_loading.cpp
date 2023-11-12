@@ -23,17 +23,17 @@ std::unique_ptr<VFont> LoadFont(const std::string_view &font_name,
 
     const auto &config = *opt_config;
 
-    if (config.contains(font_name) && config[font_name].is_table() && config[font_name]["file"].is_string()) {
-        const auto &section = config[font_name].as_table();
+    if (config.contains(font_name_str) && config[font_name_str].is_object() && config[font_name_str].contains("file")) {
+        const auto &section = config[font_name_str];
         auto msg = fmt::format("Loading BmFont {}", font_name);
         core.Trace(msg.c_str());
-        std::string fnt_path = *section->at("file").value<std::string>();
+        std::string fnt_path = section["file"];
         auto result = std::make_unique<bmfont::BmFont>(fnt_path, renderer);
-        const auto &scale = section->at("pcscale");
+        const auto &scale = section["pcscale"];
         if (scale.is_string()) {
-            result->SetScale(std::stod(scale.value_or<std::string>("")));
+            result->SetScale(std::stod(scale.get<std::string>()));
         } else if (scale.is_number()) {
-            result->SetScale(scale.value_or<double>(1));
+            result->SetScale(scale.get<double>());
         }
         return result;
     }
