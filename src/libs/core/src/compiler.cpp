@@ -6533,6 +6533,10 @@ void COMPILER::SaveVariable(DATA *pV, bool bdim)
         break;
     case VAR_OBJECT:
         pV->Get(eid);
+        if (!core.IsEntityValid(eid))
+        {
+            eid = invalid_entity;
+        }
         SaveData(&eid, sizeof(eid));
         SaveAttributesData(pV->AttributesClass);
         break;
