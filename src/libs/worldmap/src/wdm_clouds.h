@@ -18,6 +18,12 @@ class WdmCloud;
 
 class WdmClouds : public WdmRenderObject
 {
+#ifdef _WIN32 // Effects
+    static inline ID3DXEffect *fx_;
+    static inline D3DXHANDLE projectionMatrix_;
+    static inline D3DXHANDLE cloudMatrix_;
+#endif
+
     static IDirect3DVertexDeclaration9 *vertexDecl_;
     void CreateVertexDeclaration(VDX9RENDER *rs);
 
