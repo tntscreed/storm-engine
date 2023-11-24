@@ -12,14 +12,14 @@ namespace {
 constexpr size_t MAX_SYMBOLS = 512;
 constexpr size_t SYM_VERTEXS = 6;
 
-constexpr auto FONT_CHAR_FVF = (D3DFVF_XYZRHW | D3DFVF_DIFFUSE | D3DFVF_TEX1 | D3DFVF_TEXTUREFORMAT2);
+constexpr auto FONT_CHAR_FVF = (D3DFVF_XYZRHW | D3DFVF_DIFFUSE | D3DFVF_TEX1 | D3DFVF_TEXCOORDSIZE3(0) );
 
 struct BMFONT_CHAR_VERTEX
 {
     CVECTOR pos;
     float rhw;
     uint32_t color;
-    float tu, tv;
+    float tu, tv, tg;
 };
 
 bool IsSignatureValid(const std::array<char, 4> &signature) {
@@ -52,13 +52,20 @@ std::string ReadString(std::ifstream &stream)
 
 } // namespace
 
-BmFont::BmFont(const std::string_view &file_path, VDX9RENDER &renderer)
-    : renderer_(renderer)
+BmFont::BmFont(const std::string_view &file_path, VDX9RENDER &renderer) : renderer_(renderer)
 {
     LoadFromFnt(std::string(file_path));
 
     InitTextures();
     InitVertexBuffer();
+}
+
+BmFont::~BmFont()
+{
+    if (gradientTexture_ != -1)
+    {
+        renderer_.TextureRelease(gradientTexture_);
+    }
 }
 
 std::optional<size_t> BmFont::Print(float x, float y, const std::string_view &text,
@@ -69,9 +76,17 @@ std::optional<size_t> BmFont::Print(float x, float y, const std::string_view &te
     const float scale = scale_ * overrides.scale.value_or(1.f);
     const uint32_t color = overrides.color.value_or(0xFFFFFFFF);
 
-    renderer_.TechniqueExecuteStart("InterfaceFont");
+    if (gradientTexture_ != -1)
+    {
+        renderer_.TechniqueExecuteStart("BmFontGradient");
+    }
+    else
+    {
+        renderer_.TechniqueExecuteStart("BmFont");
+    }
 
     renderer_.TextureSet(0, textures_[0].textureHandle_);
+    renderer_.TextureSet(1, gradientTexture_);
     renderer_.SetFVF(FONT_CHAR_FVF);
     renderer_.SetStreamSource(0, renderer_.GetVertexBuffer(vertexBuffer_), sizeof(BMFONT_CHAR_VERTEX));
 
@@ -115,7 +130,7 @@ size_t BmFont::GetStringWidth(const std::string_view &text, const FontPrintOverr
 
 size_t BmFont::GetHeight() const
 {
-    return lineHeight_;
+    return std::lround(static_cast<double>(lineHeight_) * scale_ * lineHeightScaling_);
 }
 
 void BmFont::TempUnload()
@@ -134,6 +149,19 @@ void BmFont::RepeatInit()
 BmFont &BmFont::SetScale(double scale)
 {
     scale_ = scale;
+    return *this;
+}
+
+BmFont &BmFont::SetLineScale(double scale)
+{
+    lineHeightScaling_ = scale;
+    return *this;
+}
+
+BmFont &BmFont::SetGradient(int32_t gradient_texture)
+{
+    gradientTexture_ = gradient_texture;
+    renderer_.TextureIncReference(gradientTexture_);
     return *this;
 }
 
@@ -237,6 +265,13 @@ void BmFont::InitVertexBuffer()
     renderer_.UnLockVertexBuffer(vertexBuffer_);
 }
 
+void BmFont::InitShader()
+{
+#ifdef _WIN32 // Effects
+    fx_ = renderer_.GetEffectPointer("BmFont");
+#endif
+}
+
 BmFont::UpdateVertexBufferResult BmFont::UpdateVertexBuffer(float x, float y, const std::string_view &text, float scale, uint32_t color)
 {
     UpdateVertexBufferResult result{
@@ -304,6 +339,16 @@ BmFont::UpdateVertexBufferResult BmFont::UpdateVertexBuffer(float x, float y, co
         verts[3].tv = uv.y2;
         verts[4].tv = uv.y2;
         verts[5].tv = uv.y1;
+
+        float top = static_cast<float>(character->yoffset) / lineHeight_;
+        float bottom = static_cast<float>(character->yoffset + character->height) / lineHeight_;
+
+        verts[0].tg = top;
+        verts[1].tg = bottom;
+        verts[2].tg = top;
+        verts[3].tg = bottom;
+        verts[4].tg = bottom;
+        verts[5].tg = top;
 
         for (size_t j = 0; j < SYM_VERTEXS; ++j) {
             verts[j].color = color;
