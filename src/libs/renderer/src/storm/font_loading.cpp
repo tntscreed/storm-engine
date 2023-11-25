@@ -28,22 +28,32 @@ std::unique_ptr<VFont> LoadFont(const std::string_view &font_name,
         core.Trace(msg.c_str());
         std::string fnt_path = section["file"];
         auto result = std::make_unique<bmfont::BmFont>(fnt_path, renderer);
-        if (const auto &scale = section["pcscale"]; scale.is_string()) {
-            result->SetScale(std::stod(scale.get<std::string>()));
-        } else if (scale.is_number()) {
-            result->SetScale(scale.get<double>());
-        }
-        if (const auto &scale = section["line_spacing"]; scale.is_string()) {
-            result->SetLineScale(std::stod(scale.get<std::string>()));
-        } else if (scale.is_number()) {
-            result->SetLineScale(scale.get<double>());
-        }
-        if (const auto &gradient = section["gradient"]; gradient.is_string())
+
+        if (section.contains("pcscale") )
         {
-            const auto gradient_texture_path = gradient.get<std::string>();
-            const uint32_t gradient_texture = renderer.TextureCreate(gradient_texture_path.c_str());
-            result->SetGradient(gradient_texture);
-            renderer.TextureRelease(gradient_texture);
+            if (const auto &scale = section["pcscale"]; scale.is_string()) {
+                result->SetScale(std::stod(scale.get<std::string>()));
+            } else if (scale.is_number()) {
+                result->SetScale(scale.get<double>());
+            }
+        }
+        if (section.contains("line_spacing") )
+        {
+            if (const auto &scale = section["line_spacing"]; scale.is_string()) {
+                result->SetLineScale(std::stod(scale.get<std::string>()));
+            } else if (scale.is_number()) {
+                result->SetLineScale(scale.get<double>());
+            }
+        }
+        if (section.contains("gradient") )
+        {
+            if (const auto &gradient = section["gradient"]; gradient.is_string())
+            {
+                const auto gradient_texture_path = gradient.get<std::string>();
+                const uint32_t gradient_texture = renderer.TextureCreate(gradient_texture_path.c_str());
+                result->SetGradient(gradient_texture);
+                renderer.TextureRelease(gradient_texture);
+            }
         }
         return result;
     }
