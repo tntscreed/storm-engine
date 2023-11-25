@@ -38,7 +38,7 @@ class BmTexture {
 class BmFont : public VFont {
   public:
     BmFont(const std::string_view &file_path, VDX9RENDER &renderer);
-    ~BmFont() override = default;
+    ~BmFont() override;
 
     std::optional<size_t> Print(float x, float y, const std::string_view &text,
                                 const FontPrintOverrides &overrides) override;
@@ -48,12 +48,15 @@ class BmFont : public VFont {
     void RepeatInit() override;
 
     BmFont &SetScale(double scale);
+    BmFont &SetLineScale(double scale);
+    BmFont &SetGradient(int32_t gradient_texture);
 
   private:
     void LoadFromFnt(const std::string &file_path);
 
     void InitTextures();
     void InitVertexBuffer();
+    void InitShader();
 
     struct UpdateVertexBufferResult {
         size_t characters{};
@@ -72,6 +75,7 @@ class BmFont : public VFont {
     VDX9RENDER &renderer_;
 
     double scale_ = 1;
+    double lineHeightScaling_ = 1;
 
     size_t lineHeight_{};
     size_t base_{};
@@ -79,6 +83,14 @@ class BmFont : public VFont {
     size_t textureHeight_{};
 
     int32_t vertexBuffer_{};
+
+    int32_t gradientTexture_ = -1;
+
+#ifdef _WIN32 // Effects
+    static inline ID3DXEffect *fx_;
+//    static inline D3DXHANDLE projectionMatrix_;
+//    static inline D3DXHANDLE cloudMatrix_;
+#endif
 };
 
 } // namespace storm::bmfont

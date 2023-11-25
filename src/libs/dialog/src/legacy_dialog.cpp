@@ -124,7 +124,7 @@ constexpr auto SPRITE_COUNT = SPRITE_DATA.size() + (DIALOG_MAX_LINES - 1);
 
 VDX9RENDER *LegacyDialog::RenderService = nullptr;
 
-LegacyDialog::LegacyDialog() : tickSound_(DEFAULT_TICK_SOUND)
+LegacyDialog::LegacyDialog() : tickSound_(DEFAULT_TICK_SOUND), nameColor_(static_cast<int32_t>(COLOR_NORMAL))
 {
 }
 
