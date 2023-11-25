@@ -40,7 +40,7 @@ void SHIP_CAMERA::Execute(uint32_t dwDeltaTime)
 
     SetPerspective(AttributesPointer->GetAttributeAsFloat("Perspective"));
 
-    const auto fDeltaTime = 0.001f * static_cast<float>(core.GetDeltaTime());
+    const auto fDeltaTime = 0.001f * static_cast<float>(core.GetRDeltaTime());
 
     const auto *pModel = GetModelPointer();
     Assert(pModel);

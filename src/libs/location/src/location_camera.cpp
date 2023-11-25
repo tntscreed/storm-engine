@@ -112,11 +112,13 @@ bool LocationCamera::Init()
 
 // Execution
 #ifndef LOCATIONCAMERA_DEBUG
-void LocationCamera::Execute(uint32_t delta_time)
+void LocationCamera::Execute(uint32_t)
 #else
-void LocationCamera::Realize(uint32_t delta_time)
+void LocationCamera::Realize(uint32_t)
 #endif
 {
+    const auto delta_time = core.GetRDeltaTime();
+
     if (m_bTrackMode)
     {
         ProcessTrackCamera();
