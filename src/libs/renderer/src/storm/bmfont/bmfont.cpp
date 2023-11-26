@@ -113,6 +113,10 @@ size_t BmFont::GetStringWidth(const std::string_view &text, const FontPrintOverr
     {
         char32_t codepoint = utf8::Utf8ToCodepoint(text.data() + i);
 
+        if (codepoint == 10 || codepoint == 13) {
+            continue;
+        }
+
         const BmCharacter *character = GetCharacter(codepoint);
 
         if (character == nullptr) {
