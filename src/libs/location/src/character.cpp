@@ -8,6 +8,8 @@
 //
 //============================================================================================
 
+#include <shared/events.h>
+
 #include "character.h"
 #include "characters_groups.h"
 #include "lights.h"
@@ -5023,27 +5025,21 @@ inline void Character::CheckAttackHit(bool isGunBlade)
         return;
     // go through all the enemies
     bool isParry = false;
-    bool isDodge = false;
     bool isHrrrSound = true;
     bool isUseEnergy = true; // remove energy once boal
+    int hit_result = LAI_CHARACTER_HIT_HARD;
     for (size_t i = 0; i < fndCharacter.size(); i++)
     {
         // Character
         Supervisor::FindCharacter &fc = fndCharacter[i];
         if (fc.c->liveValue < 0 || fc.c->deadName || fc.d2 <= 0.0f)
-            continue;
-        if (fc.c->isRecoilState)
         {
-            int32_t resHit = 0;
-            VDATA *vd = core.Event("Check_ChrHitAttack", "iil", GetId(), fc.c->GetId(),
-                                   static_cast<int32_t>(fc.c->isRecoilState));
-            if (vd && vd->Get(resHit))
-            {
-                if (resHit == 0)
-                {
-                    isDodge = true;
-                }
-            }
+            continue;
+        }
+        VDATA *vd = core.Event("Check_ChrHitAttack", "iil", GetId(), fc.c->GetId(),
+                               static_cast<int32_t>(fc.c->isRecoilState));
+        if (vd) {
+            vd->Get(hit_result);
         }
         if (fc.c->fgtCurType == fgt_parry && fc.c->isParryState)
         {
@@ -5060,7 +5056,7 @@ inline void Character::CheckAttackHit(bool isGunBlade)
             fc.c->UpdateAnimation(); // boal
             // fc.c->PlaySound("fgt_feint");
         }
-        else if (!isDodge)
+        else if (hit_result != LAI_CHARACTER_HIT_DODGE)
         {
             bool isBlocked = (fc.c->fgtCurType == fgt_block || fc.c->fgtCurType == fgt_blockhit);
             if (isBlockBreak)
@@ -5086,7 +5082,11 @@ inline void Character::CheckAttackHit(bool isGunBlade)
                     core.Event("Event_ChrSnd_Hit", "i", fc.c->GetId());
                 }
             }
-            fc.c->Hit(hitReaction);
+
+            if (hit_result == LAI_CHARACTER_HIT_HARD) {
+                fc.c->Hit(hitReaction);
+            }
+
             int blockTime = -1;
             if (isBlocked)
             {
