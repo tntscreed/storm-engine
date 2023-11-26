@@ -59,7 +59,7 @@ void ConvertValue(ATTRIBUTES *target, const std::string &key, const storm::Data 
     }
     else if (node.is_number_integer())
     {
-        target->SetAttributeUseDword(key.c_str(), node.get<uint32_t>());
+        target->SetAttribute(key, std::to_string(node.get<int64_t>()));
     }
     else if (node.is_boolean()) {
         target->SetAttribute(key, node.get<bool>() ? "1" : "0");
