@@ -129,7 +129,7 @@ size_t BmFont::GetStringWidth(const std::string_view &text, const FontPrintOverr
         previous = codepoint;
     }
 
-    return static_cast<int32_t>(xoffset);
+    return std::lround(xoffset);
 }
 
 size_t BmFont::GetHeight() const
@@ -289,6 +289,10 @@ BmFont::UpdateVertexBufferResult BmFont::UpdateVertexBuffer(float x, float y, co
     for (size_t i = 0; i < text.size(); i += utf8::u8_inc(text.data() + i))
     {
         char32_t codepoint = utf8::Utf8ToCodepoint(text.data() + i);
+
+        if (codepoint == 10 || codepoint == 13) {
+            continue;
+        }
 
         const BmCharacter *character = GetCharacter(codepoint);
 

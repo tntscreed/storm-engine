@@ -2906,7 +2906,7 @@ int32_t DX9RENDER::ExtPrint(int32_t nFontNum, uint32_t foreColor, uint32_t backC
     switch (wAlign)
     {
     case PR_ALIGN_CENTER:
-        x -= static_cast<int32_t>((pFont->GetStringWidth(Buff_4k, {.scale = fScale}) + 1L) / 2L);
+        x -= static_cast<int32_t>(pFont->GetStringWidth(Buff_4k, {.scale = fScale}) / 2);
         break;
     case PR_ALIGN_RIGHT:
         x -= static_cast<int32_t>(pFont->GetStringWidth(Buff_4k, {.scale = fScale}));
