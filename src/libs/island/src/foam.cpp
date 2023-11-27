@@ -5,6 +5,13 @@
 #include "dx9render.h"
 #include "math3d.h"
 
+namespace
+{
+
+constexpr size_t MAX_FOAM_VERTICES = 5000;
+
+} // namespace
+
 CoastFoam::CoastFoam()
 {
     pSea = nullptr;
@@ -42,8 +49,8 @@ bool CoastFoam::Init()
     rs = static_cast<VDX9RENDER *>(core.GetService("dx9render"));
 
     iVBuffer = rs->CreateVertexBuffer(D3DFVF_XYZ | D3DFVF_DIFFUSE | D3DFVF_TEX1 | D3DFVF_TEXTUREFORMAT2,
-                                      sizeof(FoamVertex) * 5000, D3DUSAGE_DYNAMIC | D3DUSAGE_WRITEONLY);
-    iIBuffer = rs->CreateIndexBuffer(10000 * 2 * 3, D3DUSAGE_DYNAMIC | D3DUSAGE_WRITEONLY);
+                                      sizeof(FoamVertex) * MAX_FOAM_VERTICES, D3DUSAGE_DYNAMIC | D3DUSAGE_WRITEONLY);
+    iIBuffer = rs->CreateIndexBuffer(MAX_FOAM_VERTICES * 2 * 2 * 3, D3DUSAGE_DYNAMIC | D3DUSAGE_WRITEONLY);
 
     iCursorTex = rs->TextureCreate("cursor.tga");
 
@@ -439,9 +446,10 @@ void CoastFoam::InitNewFoam(Foam *pF)
 
 void CoastFoam::ExecuteFoamType2(Foam *pF, float fDeltaTime)
 {
-    const int32_t iLen = pF->aWorkParts.size();
+    int32_t iLen = pF->aWorkParts.size();
     if (!iLen)
         return;
+    iLen = std::min(iLen, static_cast<int32_t>(MAX_FOAM_VERTICES / 8));
 
     CVECTOR vCamPos, vCamAng;
     float fPerspective;
