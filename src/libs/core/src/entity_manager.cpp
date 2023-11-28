@@ -9,6 +9,8 @@
 #include "string_compare.hpp"
 #include "vma.hpp"
 
+#include <spdlog/spdlog.h>
+
 #include <chrono>
 #include <functional>
 
@@ -109,7 +111,7 @@ entid_t EntityManager::CreateEntity(const char *name, ATTRIBUTES *attr)
     const auto hash = MakeHashValue(name);
     if (hash == 0)
     {
-        throw std::runtime_error("null hash");
+        throw std::runtime_error("CreateEntity null hash");
     }
     VMA *pClass = nullptr;
     for (const auto &c : __STORM_CLASSES_REGISTRY)
@@ -122,14 +124,16 @@ entid_t EntityManager::CreateEntity(const char *name, ATTRIBUTES *attr)
     }
     if (pClass == nullptr)
     {
-        throw std::runtime_error("invalid entity name");
+        spdlog::error("Invalid entity name '{}'", name);
+        return invalid_entity;
     }
 
     // Create entity
     auto *ptr = static_cast<Entity *>(pClass->CreateClass());
     if (ptr == nullptr)
     {
-        throw std::runtime_error("CreateClass returned nullptr");
+        spdlog::error("CreateClass returned nullptr for '{}'", name);
+        return invalid_entity;
     }
 
     // Init entity
@@ -150,6 +154,7 @@ entid_t EntityManager::CreateEntity(const char *name, ATTRIBUTES *attr)
         // delete if fail
         const auto index = static_cast<entid_index_t>(id);
         MarkDeleted(entities_[index]);
+        spdlog::error("Failed to initialize entity for '{}'", name);
         return invalid_entity;
     }
 
