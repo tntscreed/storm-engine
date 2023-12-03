@@ -502,7 +502,8 @@ void SEA::BuildVolumeTexture()
 bool SEA::EditMode_Update()
 {
     // return true;
-    v4SeaColor = CVECTOR4(10.0f / 255.0f, 55.0f / 255.0f, 100.0f / 255.0f, 1.0f);
+    // v4SeaColor = CVECTOR4(10.0f / 255.0f, 55.0f / 255.0f, 100.0f / 255.0f, 1.0f);
+    v4SeaColor = CVECTOR4(0, 255, 0, 1.0f);
     v4SkyColor = CVECTOR4(1.0f, 1.0f, 1.0f, 1.0f);
 
     const float fReflection = 0.8f;
@@ -1905,7 +1906,7 @@ uint32_t SEA::AttributeChanged(ATTRIBUTES *pAttribute)
             return 0;
         }
 
-        if (*pAttribute == "Frenel")
+        if (*pAttribute == "Fresnel" || *pAttribute == "Frenel") // "Frenel" for backwards compatibility
         {
             fFrenel = pAttribute->GetAttributeAsFloat();
             return 0;
