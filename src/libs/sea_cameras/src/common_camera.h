@@ -1,23 +1,23 @@
 #pragma once
 
+#include "core.h"
 #include "entity.h"
 #include "vai_objbase.h"
-#include "core.h"
 #include "vma.hpp"
 
 class COMMON_CAMERA : public Entity
 {
   private:
-    bool bActive;
-    bool bOn;
+    bool bActive = false;
+    bool bOn = false;
 
-    float fPerspective;
-
-    entid_t eidObject;
-    VAI_OBJBASE *pAIObj;
+    entid_t eidObject{invalid_entity};
+    VAI_OBJBASE *pAIObj = nullptr;
 
   protected:
-    ATTRIBUTES *pACharacter;
+    ATTRIBUTES *pACharacter = nullptr;
+
+    float fPerspective{1.285f};
 
   public:
     bool FindShip()
@@ -101,14 +101,6 @@ class COMMON_CAMERA : public Entity
     virtual void Save(CSaveLoad *pSL) = 0;
     virtual void Load(CSaveLoad *pSL) = 0;
 
-    COMMON_CAMERA()
-        : eidObject(0), pAIObj(nullptr), pACharacter(nullptr)
-    {
-        bOn = false;
-        bActive = false;
-        fPerspective = 1.285f;
-    }
-    ;
-
+    COMMON_CAMERA() = default;
     ~COMMON_CAMERA() override{};
 };
