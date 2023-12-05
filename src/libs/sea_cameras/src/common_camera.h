@@ -1,25 +1,16 @@
 #pragma once
 
 #include "core.h"
-#include "entity.h"
 #include "vai_objbase.h"
-#include "vma.hpp"
 
-class COMMON_CAMERA : public Entity
+#include <storm/renderer/camera.hpp>
+
+class COMMON_CAMERA : public storm::Camera
 {
-  private:
-    bool bActive = false;
-    bool bOn = false;
-
-    entid_t eidObject{invalid_entity};
-    VAI_OBJBASE *pAIObj = nullptr;
-
-  protected:
-    ATTRIBUTES *pACharacter = nullptr;
-
-    float fPerspective{1.285f};
-
   public:
+    COMMON_CAMERA() = default;
+    ~COMMON_CAMERA() override = default;
+
     bool FindShip()
     {
         Assert(pACharacter);
@@ -56,51 +47,37 @@ class COMMON_CAMERA : public Entity
     void SetEID(entid_t pEID)
     {
         eidObject = pEID;
-    };
+    }
 
     entid_t GetEID() const
     {
         return eidObject;
-    };
+    }
 
     virtual void SetCharacter(ATTRIBUTES *_pACharacter)
     {
         pACharacter = _pACharacter;
-    };
+    }
 
     void SetPerspective(float _fPerspective)
     {
         fPerspective = _fPerspective;
-    };
+    }
 
     float GetPerspective() const
     {
         return fPerspective;
-    };
-
-    void SetOn(bool bOnOff)
-    {
-        bOn = bOnOff;
-    };
-
-    void SetActive(bool bNewActive)
-    {
-        bActive = bNewActive;
-    };
-
-    bool isOn() const
-    {
-        return bOn;
-    };
-
-    bool isActive() const
-    {
-        return bActive;
-    };
+    }
 
     virtual void Save(CSaveLoad *pSL) = 0;
     virtual void Load(CSaveLoad *pSL) = 0;
 
-    COMMON_CAMERA() = default;
-    ~COMMON_CAMERA() override{};
+  protected:
+    ATTRIBUTES *pACharacter = nullptr;
+
+    float fPerspective{1.285f};
+
+  private:
+    entid_t eidObject{invalid_entity};
+    VAI_OBJBASE *pAIObj = nullptr;
 };

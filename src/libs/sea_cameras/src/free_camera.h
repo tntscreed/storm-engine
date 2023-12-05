@@ -12,31 +12,16 @@ class FREE_CAMERA final : public COMMON_CAMERA
     FREE_CAMERA();
     ~FREE_CAMERA() override;
 
-    void SetDevice();
     bool Init() override;
     void Move(uint32_t real_delta);
-    void Execute();
+    void Execute(uint32_t real_delta) override;
     bool CreateState(ENTITY_STATE_GEN *state_gen) const;
     bool LoadState(ENTITY_STATE *state);
-
-    void ProcessStage(Stage stage, uint32_t) override
-    {
-        switch (stage)
-        {
-        case Stage::execute:
-            Execute();
-            break;
-        default:
-            break;
-        }
-    }
 
     void Save(CSaveLoad *pSL) override;
     void Load(CSaveLoad *pSL) override;
 
   private:
-    VDX9RENDER *renderer_ = nullptr;
-
     CVECTOR position_{};
     CVECTOR angle_{};
 

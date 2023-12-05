@@ -12,17 +12,12 @@ constexpr float kSpeed = 0.005f;
 
 FREE_CAMERA::FREE_CAMERA()
     : position_(0.f, 30.f, 250.f)
-{
-    SetOn(false);
-    SetActive(false);
-}
+{}
 
 FREE_CAMERA::~FREE_CAMERA() = default;
 
 bool FREE_CAMERA::Init()
 {
-    SetDevice();
-
     if (AttributesPointer->HasAttribute("position"))
     {
         const auto *position_attr = AttributesPointer->GetAttributeClass("position");
@@ -35,12 +30,6 @@ bool FREE_CAMERA::Init()
     return true;
 }
 
-void FREE_CAMERA::SetDevice()
-{
-    renderer_ = static_cast<VDX9RENDER *>(core.GetService("dx9render"));
-    Assert(renderer_);
-}
-
 bool FREE_CAMERA::CreateState(ENTITY_STATE_GEN *state_gen) const
 {
     state_gen->SetState("vv", sizeof(position_), position_, sizeof(angle_), angle_);
@@ -49,38 +38,30 @@ bool FREE_CAMERA::CreateState(ENTITY_STATE_GEN *state_gen) const
 
 bool FREE_CAMERA::LoadState(ENTITY_STATE *state)
 {
-    SetDevice();
     state->Struct(sizeof(position_), reinterpret_cast<char *>(&position_));
     state->Struct(sizeof(angle_), reinterpret_cast<char *>(&angle_));
     return true;
 }
 
-void FREE_CAMERA::Execute()
+void FREE_CAMERA::Execute(uint32_t real_delta)
 {
-    if (!isOn())
+    if (AttributesPointer->HasAttribute("Perspective") )
     {
-        return;
+        SetPerspective(AttributesPointer->GetAttributeAsFloat("Perspective"));
     }
-
-    SetPerspective(AttributesPointer->GetAttributeAsFloat("Perspective"));
 
     float perspective{};
     if (!cameraOverride_)
     {
-        renderer_->GetCamera(position_, angle_, perspective);
+        GetRenderer().GetCamera(position_, angle_, perspective);
     }
     cameraOverride_ = false;
 
-    Move(core.GetRDeltaTime());
+    Move(real_delta);
 }
 
 void FREE_CAMERA::Move(uint32_t real_delta)
 {
-    if (!isActive())
-    {
-        return;
-    }
-
     CONTROL_STATE cs{};
     core.Controls->GetControlState("FreeCamera_Turn_H", cs);
     angle_.y += kSensitivity * cs.fValue;
@@ -113,7 +94,7 @@ void FREE_CAMERA::Move(uint32_t real_delta)
         position_ -= speed * CVECTOR(s0 * c1, -s1, c0 * c1);
     }
 
-    renderer_->SetCamera(position_, angle_, GetPerspective());
+    GetRenderer().SetCamera(position_, angle_, GetPerspective());
 }
 
 void FREE_CAMERA::Save(CSaveLoad *pSL)

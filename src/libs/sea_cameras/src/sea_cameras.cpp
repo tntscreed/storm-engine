@@ -51,8 +51,7 @@ uint64_t SEA_CAMERAS::ProcessMessage(MESSAGE &message)
         const auto it = std::find(CamerasArray.begin(), CamerasArray.end(), pCamera);
         if (it == CamerasArray.end())
             CamerasArray.push_back(pCamera);
-        pCamera->SetOn(false);
-        pCamera->SetActive(bActive);
+        pCamera->SetActive(false);
     }
     break;
     case AI_CAMERAS_SET_CAMERA: {
@@ -64,8 +63,9 @@ uint64_t SEA_CAMERAS::ProcessMessage(MESSAGE &message)
         if (it == CamerasArray.end())
             CamerasArray.push_back(pCamera);
         for (i = 0; i < CamerasArray.size(); i++)
-            CamerasArray[i]->SetOn(false);
-        pCamera->SetOn(true);
+        {
+            CamerasArray[i]->SetActive(false);
+        }
         pCamera->SetActive(bActive);
         pCamera->SetCharacter(pACharacter);
     }

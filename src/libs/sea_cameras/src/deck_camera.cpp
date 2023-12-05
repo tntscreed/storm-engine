@@ -14,7 +14,6 @@
 DECK_CAMERA::DECK_CAMERA()
 {
     vb_id = 0;
-    RenderService = nullptr;
     camera_pos.y = 1.0f;
     pACharacter = nullptr;
     pathNode = nullptr;
@@ -27,17 +26,7 @@ DECK_CAMERA::~DECK_CAMERA()
 
 bool DECK_CAMERA::Init()
 {
-    // GUARD(DECK_CAMERA::Init())
-    // core.SystemMessages(GetId(),true);
-    SetDevice();
-    // UNGUARD
     return true;
-}
-
-void DECK_CAMERA::SetDevice()
-{
-    RenderService = static_cast<VDX9RENDER *>(core.GetService("dx9render"));
-    Assert(RenderService);
 }
 
 bool DECK_CAMERA::CreateState(ENTITY_STATE_GEN *state_gen)
@@ -47,33 +36,27 @@ bool DECK_CAMERA::CreateState(ENTITY_STATE_GEN *state_gen)
 
 bool DECK_CAMERA::LoadState(ENTITY_STATE *state)
 {
-    SetDevice();
     return true;
 }
 
-void DECK_CAMERA::Execute(uint32_t Delta_Time)
+void DECK_CAMERA::Execute(uint32_t real_delta)
 {
-    if (!isOn())
-        return;
     if (!FindShip() || !FindPath())
         return;
 
     SetPerspective(AttributesPointer->GetAttributeAsFloat("Perspective"));
 
-    Move(Delta_Time);
+    Move(real_delta);
 }
 
-void DECK_CAMERA::Realize(uint32_t Delta_Time)
-{
-    if (!isOn())
-        return;
-}
+// void DECK_CAMERA::Realize(uint32_t Delta_Time)
+// {
+//     if (!IsActive())
+//         return;
+// }
 
 void DECK_CAMERA::Move(uint32_t DeltaTime)
 {
-    if (!isActive())
-        return;
-
     pModel = static_cast<MODEL *>(GetModelPointer());
     Assert(pModel);
 
@@ -298,7 +281,7 @@ void DECK_CAMERA::Move(uint32_t DeltaTime)
     s_pos = pathNode->glob_mtx * (camera_pos + CVECTOR(0.f, h_eye, 0.f));
 
     // set camera
-    RenderService->SetCamera(s_pos, s_ang, GetPerspective());
+    GetRenderer().SetCamera(s_pos, s_ang, GetPerspective());
 }
 
 void DECK_CAMERA::SetCharacter(ATTRIBUTES *_pACharacter)
@@ -697,8 +680,7 @@ void DECK_CAMERA::Save(CSaveLoad *pSL)
     pSL->SaveLong(lock_x);
     pSL->SaveLong(lock_y);
 
-    pSL->SaveDword(isOn());
-    pSL->SaveDword(isActive());
+    pSL->SaveDword(IsActive());
     pSL->SaveFloat(GetPerspective());
     pSL->SaveAPointer("character", pACharacter);
 }
@@ -731,11 +713,10 @@ void DECK_CAMERA::Load(CSaveLoad *pSL)
     lock_x = pSL->LoadLong();
     lock_y = pSL->LoadLong();
 
-    SetOn(pSL->LoadDword() != 0);
     SetActive(pSL->LoadDword() != 0);
     SetPerspective(pSL->LoadFloat());
     SetCharacter(pSL->LoadAPointer("character"));
 
-    if (isOn())
+    if (IsActive())
         bLoad = true;
 }
