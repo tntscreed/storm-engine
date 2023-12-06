@@ -309,19 +309,23 @@ bool DECK_CAMERA::FindPath()
 
 uint64_t DECK_CAMERA::ProcessMessage(MESSAGE &message)
 {
-    switch (message.Long())
+    if (message.GetCurrentFormatType() == 'l')
     {
-    case MSG_DECK_CAMERA_SET_VIEWPOINT: {
-        CVECTOR cv;
-        cv.x = message.Float();
-        cv.y = message.Float();
-        cv.z = message.Float();
-        SetViewPoint(cv);
-    }
-    break;
+        switch (message.Long())
+        {
+        case MSG_DECK_CAMERA_SET_VIEWPOINT: {
+            CVECTOR cv;
+            cv.x = message.Float();
+            cv.y = message.Float();
+            cv.z = message.Float();
+            SetViewPoint(cv);
+            return 0;
+        }
+            break;
+        }
     }
 
-    return 0;
+    return COMMON_CAMERA::ProcessMessage(message);
 }
 
 void DECK_CAMERA::SetStartPos()

@@ -28,7 +28,15 @@ void Scene::ProcessStage(Stage stage, uint32_t delta)
             auto *camera = static_cast<Camera*>(core.GetEntityPointerSafe(activeCamera_) );
             if (camera != nullptr)
             {
-                camera->Execute(core.GetRDeltaTime());
+                const uint32_t delta_time = core.GetDeltaTime();
+                if (delta_time > 1e-5f)
+                {
+                    camera->Execute(core.GetRDeltaTime());
+                }
+                else
+                {
+                    camera->Execute(delta_time);
+                }
             }
             else
             {

@@ -29,6 +29,8 @@ class COMMON_CAMERA : public storm::Camera
         return false;
     }
 
+    uint64_t ProcessMessage(MESSAGE &msg) override;
+
     MODEL *GetModelPointer() const
     {
         return static_cast<MODEL *>(core.GetEntityPointer(eidObject));

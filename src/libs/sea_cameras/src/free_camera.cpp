@@ -5,7 +5,7 @@
 namespace
 {
 
-constexpr float kSensitivity = 0.0015f;
+constexpr float kSensitivity = 0.0001f;
 constexpr float kSpeed = 0.005f;
 
 } // namespace
@@ -64,9 +64,9 @@ void FREE_CAMERA::Move(uint32_t real_delta)
 {
     CONTROL_STATE cs{};
     core.Controls->GetControlState("FreeCamera_Turn_H", cs);
-    angle_.y += kSensitivity * cs.fValue;
+    angle_.y += kSensitivity * cs.fValue * real_delta;
     core.Controls->GetControlState("FreeCamera_Turn_V", cs);
-    angle_.x += kSensitivity * cs.fValue;
+    angle_.x += kSensitivity * cs.fValue * real_delta;
 
     const auto c0 = cosf(angle_.y);
     const auto s0 = sinf(angle_.y);
