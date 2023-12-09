@@ -107,6 +107,10 @@ void Lighter::Execute(uint32_t delta_time)
 
 void Lighter::PreparingData()
 {
+    if (isDataPrepared_)
+    {
+        return;
+    }
     // Lighting
     // Scattered
     auto amb = 0xff404040;
@@ -160,6 +164,7 @@ void Lighter::PreparingData()
     window.InitList(lights);
     window.isTraceShadows = autoTrace;
     window.isSmoothShadows = autoSmooth;
+    isDataPrepared_ = true;
 }
 
 void Lighter::Realize(uint32_t delta_time)
@@ -200,6 +205,42 @@ uint64_t Lighter::ProcessMessage(MESSAGE &message)
     {
         // Adding the model
         MsgAddLight(message);
+        return true;
+    }
+    if (storm::iEquals(command, "LoadPreset"))
+    {
+        PreparingData();
+        const int32_t preset = message.Long();
+        window.LoadPreset(preset);
+        return true;
+    }
+    if (storm::iEquals(command, "SavePreset"))
+    {
+        PreparingData();
+        const int32_t preset = message.Long();
+        window.SavePreset(preset);
+        return true;
+    }
+    if (storm::iEquals(command, "Process"))
+    {
+        PreparingData();
+        window.isUpdateLight = true;
+        lightProcessor.Process();
+        if (message.ParamValid() ) {
+            window.isTraceShadows = message.Long() != 0;
+            lightProcessor.Process();
+        }
+        if (message.ParamValid() ) {
+            window.isSmoothShadows = message.Long() != 0;
+            lightProcessor.Process();
+        }
+        lightProcessor.Process();
+        return true;
+    }
+    if (storm::iEquals(command, "SaveLight"))
+    {
+        PreparingData();
+        geometry.Save();
         return true;
     }
     return false;
