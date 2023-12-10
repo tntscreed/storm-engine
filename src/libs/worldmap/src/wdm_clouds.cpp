@@ -20,6 +20,13 @@
 #define WdmCloudsSizeMin 30.0f
 #define WdmCloudsSizeMax 50.0f
 
+namespace
+{
+
+constexpr size_t kCloudAmount = 16;
+
+} // namespace
+
 IDirect3DVertexDeclaration9 *WdmClouds::vertexDecl_ = nullptr;
 
 WdmClouds::Cloud::Cloud()
@@ -272,10 +279,10 @@ void WdmClouds::Cloud::Kill(const Cloud &cld)
 
 WdmClouds::WdmClouds()
 {
-    // set positions and directions to groups
-    for (int32_t i = 0; i < sizeof(clouds) / sizeof(Cloud); i++)
+    clouds_.resize(kCloudAmount);
+    for (auto &cloud: clouds_)
     {
-        clouds[i].Reset(true);
+        cloud.Reset(true);
     }
     texture = wdmObjects->rs->TextureCreate("\\WorldMap\\clouds.tga");
     light = wdmObjects->rs->TextureCreate("\\WorldMap\\cloudslight.tga");
@@ -293,22 +300,24 @@ WdmClouds::~WdmClouds()
 void WdmClouds::Update(float dltTime)
 {
     // Restart killed ones
-    for (int32_t i = 0; i < sizeof(clouds) / sizeof(Cloud); i++)
+    for (auto &cloud: clouds_)
     {
-        if (clouds[i].Reset())
+        if (cloud.Reset() )
+        {
             break;
+        }
     }
     // Updating positions
-    for (int32_t i = 0; i < sizeof(clouds) / sizeof(Cloud); i++)
+    for (auto &cloud: clouds_)
     {
-        clouds[i].Update(dltTime);
+        cloud.Update(dltTime);
     }
     // Remove strongly intersecting
-    for (int32_t i = 0; i < sizeof(clouds) / sizeof(Cloud) - 1; i++)
+    for (auto first_it  = clouds_.begin(), it_end = clouds_.end(); first_it < it_end; ++first_it)
     {
-        for (auto j = i + 1; j < sizeof(clouds) / sizeof(Cloud); j++)
+        for(auto second_it = first_it + 1; second_it < it_end; ++second_it)
         {
-            clouds[j].Kill(clouds[i]);
+            first_it->Kill(*second_it);
         }
     }
 }
@@ -332,11 +341,11 @@ void WdmClouds::LRender(VDX9RENDER *rs)
     alpha *= alpha;
     // Draw visible
     int32_t count = 0;
-    for (int32_t i = 0; i < sizeof(clouds) / sizeof(Cloud); i++)
+    for (auto &cloud: clouds_)
     {
         // get the sphere
         CVECTOR c;
-        auto r = clouds[i].GetBound(c);
+        auto r = cloud.GetBound(c);
         // test for visibility
         int32_t j;
         for (j = 0; j < 4; j++)
@@ -349,7 +358,7 @@ void WdmClouds::LRender(VDX9RENDER *rs)
         if (j < 4)
             continue;
         // Add to buffer
-        count = clouds[i].FillRects(rects, count, alpha);
+        count = cloud.FillRects(rects, count, alpha);
 
         cnt++;
     }

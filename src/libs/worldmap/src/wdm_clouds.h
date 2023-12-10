@@ -78,6 +78,6 @@ class WdmClouds : public WdmRenderObject
     void LRender(VDX9RENDER *rs) override;
 
     int32_t texture, light;
-    Cloud clouds[16];
+    std::vector<Cloud> clouds_;
     RS_RECT rects[WDMCLOUDSMAX * 16];
 };
