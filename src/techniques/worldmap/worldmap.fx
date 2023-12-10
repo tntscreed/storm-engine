@@ -20,7 +20,7 @@ VS_OUTPUT main(float4 vPosition: POSITION, float4 vColor: COLOR, float4 vTexCoor
     float cloud_min_size = cloudMatrix[1].x;
     float cloud_scale = cloudMatrix[1].z;
     float cloud_size = vColor.z * cloud_scale + cloud_min_size;
-    float view_angle = dot(vPosition, cloudMatrix[0]);
+    float view_angle = dot(normalize(vPosition), normalize(cloudMatrix[0]));
     vOut.uv1 = view_angle * rcp(cloud_size) + cloudMatrix[1].w;
 
     return vOut;

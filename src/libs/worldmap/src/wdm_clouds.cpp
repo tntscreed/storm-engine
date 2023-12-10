@@ -363,7 +363,7 @@ void WdmClouds::LRender(VDX9RENDER *rs)
 
         CMatrix prj;
         rs->GetTransform(D3DTS_PROJECTION, prj);
-        CMatrix& clouds = prj;
+        CMatrix clouds = prj;
         clouds.matrix[0] = view.matrix[1];
         clouds.matrix[1] = view.matrix[5];
         clouds.matrix[2] = view.matrix[9];
