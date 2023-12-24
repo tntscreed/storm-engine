@@ -3,7 +3,7 @@ name: Prepare BETA release
 on:
   push:
     tags:
-      - "pa[0-9]+\.[0-9]+\.[0-9]+(-beta\.[0-9]+)?"
+      - "pa*"
 
 jobs:
   build-windows:
@@ -47,7 +47,7 @@ jobs:
     - name: Publish release
       uses: softprops/action-gh-release@v1
       with:
-        draft: true
+        draft: contains(github.ref, 'beta')
         files: storm-engine.${{ matrix.configuration }}-steam-${{ matrix.enable_steam }}.zip
     - name: Setup Node.js
       uses: actions/setup-node@v2
