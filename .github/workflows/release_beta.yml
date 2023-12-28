@@ -7,11 +7,11 @@ on:
 
 jobs:
   build-windows:
-    runs-on: windows-2019
+    runs-on: windows-latest
     strategy:
       fail-fast: false
       matrix:
-        configuration: [msvc-debug, msvc-release]
+        configuration: [debug, release]
         enable_steam: [false]
 #        include:
 #          - enable_steam: true
