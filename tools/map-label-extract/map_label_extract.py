@@ -11,14 +11,13 @@ active_collection = bpy.context.view_layer.active_layer_collection.collection
 objects = active_collection.objects
 for object in objects:
     if object.parent is None:
-        worldmap_config[object.name] = {}
         for child in object.children:
             for label in child.children:
                 real_child_name = remove_blender_name_postfix(child.name)
                 real_label = remove_blender_name_postfix(label.name)
-                if real_child_name not in worldmap_config[object.name]:
-                    worldmap_config[object.name][real_child_name] = {}
-                worldmap_config[object.name][real_child_name][real_label] = {'x': -label.location.y, 'y': label.location.x, 'z': label.location.z}
+                if real_child_name not in worldmap_config:
+                    worldmap_config[real_child_name] = {}
+                worldmap_config[real_child_name][real_label] = {'x': -label.location.y, 'y': label.location.z, 'z': label.location.x}
     
 with open(bpy.path.abspath('//worldmap.toml'), 'w') as f:
     toml.dump(worldmap_config, f)
