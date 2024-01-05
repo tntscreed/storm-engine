@@ -6,12 +6,12 @@
 #include <spdlog/spdlog.h>
 
 #include "core_private.h"
+#include "fs.h"
 #include "lifecycle_diagnostics_service.hpp"
 #include "logging.hpp"
 #include "os_window.hpp"
 #include "steam_api.hpp"
 #include "v_sound_service.h"
-#include "fs.h"
 #include "watermark.hpp"
 
 namespace
@@ -235,8 +235,13 @@ int main(int argc, char *argv[])
     isRunning = true;
     while (isRunning)
     {
-        SDL_PumpEvents();
-        SDL_FlushEvents(0, SDL_LASTEVENT);
+        SDL_Event event{};
+        while (SDL_PollEvent(&event) )
+        {
+            if (auto *editor = core.GetEditor(); editor != nullptr) {
+                editor->ProcessEvent(event);
+            }
+        }
 
         if (bActive || run_in_background)
         {

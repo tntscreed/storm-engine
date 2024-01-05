@@ -32,8 +32,8 @@ class SDLWindow : public OSWindow
     void Unsubscribe(int id) override;
 
     void *OSHandle() override;
+    SDL_Window *SDLHandle() const override;
 
-    SDL_Window *SDLHandle() const;
     void ProcessEvent(const SDL_WindowEvent &evt) const;
 
   private:

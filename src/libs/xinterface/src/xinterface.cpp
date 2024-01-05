@@ -1155,7 +1155,12 @@ void XINTERFACE::LoadIni()
     sscanf(param, "%[^,],%d,size:(%d,%d),pos:(%d,%d)", param2, &m_lMouseSensitive, &MouseSize.x, &MouseSize.y,
            &m_lXMouse, &m_lYMouse);
     m_idTex = pRenderService->TextureCreate(param2);
-    core.GetWindow()->WarpMouseInWindow(windowSize.width / 2, windowSize.height / 2);
+
+    if (auto *editor = core.GetEditor(); editor == nullptr || !editor->IsFocused())
+    {
+        core.GetWindow()->WarpMouseInWindow(windowSize.width / 2, windowSize.height / 2);
+    }
+
     fXMousePos = static_cast<float>(dwScreenWidth / 2);
     fYMousePos = static_cast<float>(dwScreenHeight / 2);
     for (int i = 0; i < 4; i++)
@@ -1164,9 +1169,6 @@ void XINTERFACE::LoadIni()
     vMouse[2].tu = vMouse[3].tu = 1.f;
     vMouse[0].tv = vMouse[2].tv = 0.f;
     vMouse[1].tv = vMouse[3].tv = 1.f;
-#ifdef _WIN32 // FIX_LINUX Cursor
-    ShowCursor(false);
-#endif
 
     // set blind parameters
     m_fBlindSpeed = ini->GetFloat(section, "BlindTime", 1.f);

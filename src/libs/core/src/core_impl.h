@@ -14,6 +14,7 @@ class CoreImpl final : public CorePrivate
 {
   public:
     void Init() override;
+    void InitializeEditor(IDirect3DDevice9 *device) override;
 
     void InitBase() override;
     void ReleaseBase() override;
@@ -133,6 +134,8 @@ class CoreImpl final : public CorePrivate
     bool IsLayerFrozen(layer_index_t index) const override;
     void ForEachEntity(const std::function<void(entptr_t)>& f) override;
 
+    storm::editor::EngineEditor *GetEditor() override;
+
     void collectCrashInfo() const override;
 
     [[nodiscard]] bool initialized() const override
@@ -150,6 +153,8 @@ private:
     void loadCompatibilitySettings(INIFILE &inifile);
 
     EntityManager entity_manager_;
+
+    std::unique_ptr<storm::editor::EngineEditor> editor_;
 
     storm::ENGINE_VERSION targetVersion_ = storm::ENGINE_VERSION::LATEST;
 

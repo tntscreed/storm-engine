@@ -12,10 +12,12 @@
 #include "texture.h"
 #include "v_s_stack.h"
 
-#include <SDL_timer.h>
-#include <algorithm>
-
 #include <fmt/chrono.h>
+#include <imgui_impl_dx9.h>
+#include <SDL_timer.h>
+
+#include <algorithm>
+#include <imgui_impl_sdl2.h>
 
 #ifdef _WIN32
 #include <DxErr.h>
@@ -804,6 +806,8 @@ bool DX9RENDER::InitDevice(bool windowed, HWND _hwnd, int32_t width, int32_t hei
     effects_.setDevice(d3d9);
 #endif
 
+    core.InitializeEditor(d3d9);
+
     // Create render targets for POST PROCESS effects
     d3d9->GetRenderTarget(0, &pOriginalScreenSurface);
     d3d9->GetDepthStencilSurface(&pOriginalDepthSurface);
@@ -1256,6 +1260,10 @@ bool DX9RENDER::DX9EndScene()
 
     if (CHECKD3DERR(EndScene()))
         return false;
+
+    if (auto *editor = core.GetEditor(); editor != nullptr) {
+        editor->EndFrame();
+    }
 
     if (bMakeShoot)
         MakeScreenShot();
@@ -2734,6 +2742,10 @@ void DX9RENDER::RunStart()
     dwNumLV = 0;
     dwNumLI = 0;
     BeginScene();
+
+    if (auto *editor = core.GetEditor(); editor != nullptr) {
+        editor->StartFrame();
+    }
 
     //------------------------------------------
     bInsideScene = true;

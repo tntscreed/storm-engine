@@ -1,0 +1,17 @@
+if (NOT WIN32)
+    set(SYSTEM_DEPS "${NATIVE_D3D9_LIBS}")
+endif()
+
+add_library(imgui_backend STATIC
+    "${CONAN_SRC_DIRS_IMGUI}/imgui_impl_dx9.cpp"
+    "${CONAN_SRC_DIRS_IMGUI}/imgui_impl_sdl2.cpp"
+)
+target_include_directories(imgui_backend PUBLIC ${CONAN_SRC_DIRS_IMGUI})
+target_link_libraries(imgui_backend PUBLIC imgui ${SDL2_LIBRARIES} ${SYSTEM_DEPS})
+
+STORM_SETUP(
+        TARGET_NAME editor
+        TYPE storm_module
+        DEPENDENCIES core imgui_backend
+        TEST_DEPENDENCIES catch2
+)

@@ -121,6 +121,11 @@ void CoreImpl::Init()
     SetLayerType(SOUND_DEBUG_REALIZE, layer_type_t::realize);
 }
 
+void CoreImpl::InitializeEditor(IDirect3DDevice9 *device)
+{
+    editor_ = std::make_unique<storm::editor::EngineEditor>(GetWindow()->SDLHandle(), device);
+}
+
 void CoreImpl::InitBase()
 {
     LoadClassesTable();
@@ -1020,6 +1025,11 @@ bool CoreImpl::IsLayerFrozen(layer_index_t index) const
 void CoreImpl::ForEachEntity(const std::function<void(entptr_t)> &f)
 {
     entity_manager_.ForEachEntity(f);
+}
+
+storm::editor::EngineEditor *CoreImpl::GetEditor()
+{
+    return editor_.get();
 }
 
 void CoreImpl::collectCrashInfo() const
