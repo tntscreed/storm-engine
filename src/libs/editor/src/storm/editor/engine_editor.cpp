@@ -4,6 +4,8 @@
 #include <imgui_impl_dx9.h>
 #include <imgui_impl_sdl2.h>
 
+#include <array>
+
 #ifdef WIN32
 #include <Windows.h>
 #endif WIN32
@@ -13,6 +15,8 @@ namespace storm::editor
 
 class EngineEditor::Impl final {
   public:
+    std::array<bool, 5> debugFlags_;
+
     ImGuiContext *imgui_;
 
     bool isFocused_ = true;
@@ -61,11 +65,22 @@ void EngineEditor::StartFrame()
 
         if (ImGui::BeginMenuBar() )
         {
-            if (ImGui::BeginMenu("Engine") )
+            if (ImGui::BeginMenu("Tools") )
             {
                 ImGui::MenuItem("Entities", NULL, &impl_->showEntityMenu_);
                 ImGui::EndMenu();
             }
+
+            if (ImGui::BeginMenu("Debug") )
+            {
+                ImGui::MenuItem("Wireframe mode", NULL, &impl_->debugFlags_[static_cast<size_t>(DebugFlag::RenderWireframe)]);
+                ImGui::MenuItem("Sound debug", NULL, &impl_->debugFlags_[static_cast<size_t>(DebugFlag::SoundDebug)]);
+                ImGui::MenuItem("Location debug", NULL, &impl_->debugFlags_[static_cast<size_t>(DebugFlag::LocationDebug)]);
+                ImGui::MenuItem("Extended location debug", NULL, &impl_->debugFlags_[static_cast<size_t>(DebugFlag::ExtendedLocationDebug)]);
+                ImGui::MenuItem("Ship cannon debug", NULL, &impl_->debugFlags_[static_cast<size_t>(DebugFlag::CannonDebug)]);
+                ImGui::EndMenu();
+            }
+
             ImGui::EndMenuBar();
         }
 
@@ -95,6 +110,11 @@ void EngineEditor::ProcessEvent(SDL_Event &event)
 bool EngineEditor::IsFocused() const
 {
     return impl_->isFocused_;
+}
+
+bool EngineEditor::IsDebugFlagEnabled(DebugFlag flag) const
+{
+    return impl_->debugFlags_[static_cast<size_t>(flag)];
 }
 
 } // namespace storm::editor

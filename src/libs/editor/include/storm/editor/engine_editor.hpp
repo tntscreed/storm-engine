@@ -9,6 +9,15 @@ struct IDirect3DDevice9;
 namespace storm::editor
 {
 
+enum class DebugFlag
+{
+    RenderWireframe,
+    SoundDebug,
+    LocationDebug,
+    ExtendedLocationDebug,
+    CannonDebug,
+};
+
 class EngineEditor final
 {
   public:
@@ -21,6 +30,8 @@ class EngineEditor final
     void ProcessEvent(SDL_Event &event);
 
     bool IsFocused() const;
+
+    bool IsDebugFlagEnabled(DebugFlag flag) const;
 
   private:
     class Impl;

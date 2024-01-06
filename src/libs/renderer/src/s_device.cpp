@@ -2743,7 +2743,9 @@ void DX9RENDER::RunStart()
     dwNumLI = 0;
     BeginScene();
 
-    if (auto *editor = core.GetEditor(); editor != nullptr) {
+    auto *editor = core.GetEditor();
+
+    if (editor != nullptr) {
         editor->StartFrame();
     }
 
@@ -2766,8 +2768,10 @@ void DX9RENDER::RunStart()
         InvokeEntitiesRestoreRender();
     }
 
-    SetRenderState(D3DRS_FILLMODE, (core.Controls->GetDebugAsyncKeyState('F') < 0) ? D3DFILL_WIREFRAME : D3DFILL_SOLID);
-    // SetRenderState(D3DRS_FILLMODE, D3DFILL_SOLID); eddy
+    SetRenderState(D3DRS_FILLMODE,
+                   (editor != nullptr && editor->IsDebugFlagEnabled(storm::editor::DebugFlag::RenderWireframe))
+                       ? D3DFILL_WIREFRAME
+                       : D3DFILL_SOLID);
 
     PlayToTexture();
 
