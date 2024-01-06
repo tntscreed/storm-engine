@@ -136,6 +136,12 @@ LegacyDialog::~LegacyDialog() noexcept
     {
         RenderService->TextureRelease(interfaceTexture_);
     }
+
+    if (headModel_ != invalid_entity)
+    {
+        core.EraseEntity(headModel_);
+        headModel_ = invalid_entity;
+    }
 }
 
 bool LegacyDialog::Init()
