@@ -119,6 +119,10 @@ void CoreImpl::Init()
     SetLayerType(EDITOR_REALIZE, layer_type_t::realize);
     SetLayerType(INFO_REALIZE, layer_type_t::realize);
     SetLayerType(SOUND_DEBUG_REALIZE, layer_type_t::realize);
+
+    storm::editor::EngineEditor::RegisterEditorTool("Entities", [this] (bool &active) {
+        entity_manager_.ShowEditor(active);
+    });
 }
 
 void CoreImpl::InitializeEditor(IDirect3DDevice9 *device)

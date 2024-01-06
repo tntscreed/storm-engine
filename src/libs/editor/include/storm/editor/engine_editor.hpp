@@ -1,6 +1,8 @@
 #pragma once
 
+#include <functional>
 #include <memory>
+#include <string_view>
 
 struct SDL_Window;
 union SDL_Event;
@@ -18,6 +20,8 @@ enum class DebugFlag
     CannonDebug,
 };
 
+using EditorToolCallback = std::function<void(bool &active)>;
+
 class EngineEditor final
 {
   public:
@@ -32,6 +36,8 @@ class EngineEditor final
     bool IsFocused() const;
 
     bool IsDebugFlagEnabled(DebugFlag flag) const;
+
+    static void RegisterEditorTool(const std::string_view &title, EditorToolCallback callback);
 
   private:
     class Impl;

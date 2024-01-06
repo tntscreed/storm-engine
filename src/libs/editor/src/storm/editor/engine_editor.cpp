@@ -13,15 +13,25 @@
 namespace storm::editor
 {
 
+struct EditorToolConfig
+{
+    std::string title;
+    EditorToolCallback callback;
+    bool active = false;
+};
+
 class EngineEditor::Impl final {
-  public:
+public:
+    static std::vector<EditorToolConfig> tools_;
+
     std::array<bool, 5> debugFlags_;
 
     ImGuiContext *imgui_;
 
     bool isFocused_ = true;
-    bool showEntityMenu_ = false;
 };
+
+std::vector<EditorToolConfig> EngineEditor::Impl::tools_;
 
 EngineEditor::EngineEditor(SDL_Window *window, IDirect3DDevice9 *device)
     : impl_(std::make_unique<Impl>())
@@ -58,16 +68,14 @@ void EngineEditor::StartFrame()
     ImGui::NewFrame();
     if (ImGui::Begin("Developer Tools", NULL, ImGuiWindowFlags_MenuBar) )
     {
-        if (IsFocused() )
-        {
-            ImGui::Text("Game controls are disabled while using the editor");
-        }
-
         if (ImGui::BeginMenuBar() )
         {
             if (ImGui::BeginMenu("Tools") )
             {
-                ImGui::MenuItem("Entities", NULL, &impl_->showEntityMenu_);
+                for (auto &config : Impl::tools_)
+                {
+                    ImGui::MenuItem(config.title.c_str(), NULL, &config.active);
+                }
                 ImGui::EndMenu();
             }
 
@@ -84,15 +92,15 @@ void EngineEditor::StartFrame()
             ImGui::EndMenuBar();
         }
 
-        if (impl_->showEntityMenu_) {
-            if (ImGui::Begin("Entities", &impl_->showEntityMenu_, 0) )
-            {
-                ImGui::Text("There are currently 6 entities");
-                ImGui::End();
-            }
-        }
-
         ImGui::End();
+    }
+
+    for (auto &config : Impl::tools_)
+    {
+        if (config.active)
+        {
+            config.callback(config.active);
+        }
     }
 }
 
@@ -115,6 +123,11 @@ bool EngineEditor::IsFocused() const
 bool EngineEditor::IsDebugFlagEnabled(DebugFlag flag) const
 {
     return impl_->debugFlags_[static_cast<size_t>(flag)];
+}
+
+void EngineEditor::RegisterEditorTool(const std::string_view &title, EditorToolCallback callback)
+{
+    Impl::tools_.push_back({.title = std::string(title), .callback = callback});
 }
 
 } // namespace storm::editor
