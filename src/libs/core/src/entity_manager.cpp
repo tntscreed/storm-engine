@@ -495,17 +495,14 @@ void EntityManager::ShowEditor(bool &active)
         auto text = std::format("There are currently {} entities", entities_.size() - freeIndices_.size());
         ImGui::Text(text.c_str());
 
+        static entid_t selected_entity = invalid_entity;
+
         if (ImGui::BeginTable("Entities", 2, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_Resizable | ImGuiTableFlags_Reorderable) )
         {
             ImGui::TableSetupColumn("ID", ImGuiTableColumnFlags_WidthFixed);
             ImGui::TableSetupColumn("Class", ImGuiTableColumnFlags_WidthStretch);
 
             ImGui::TableHeadersRow();
-
-            static std::vector<bool> selected;
-
-            selected.resize(entities_.size(), 0);
-            size_t i = 0;
 
             std::ranges::for_each(entities_, [&](const EntityInternalData &data) {
                 if (data.state == kValid)
@@ -514,11 +511,10 @@ void EntityManager::ShowEditor(bool &active)
                     ImGui::TableNextColumn();
 
                     std::string label = std::to_string(data.id);
-                    if (ImGui::Selectable(label.c_str(), selected[i], ImGuiSelectableFlags_SpanAllColumns) )
+                    if (ImGui::Selectable(label.c_str(), data.id == selected_entity, ImGuiSelectableFlags_SpanAllColumns) )
                     {
-                        selected[i] = !selected[i];
+                        selected_entity = data.id;
                     }
-                    ++i;
                     ImGui::TableNextColumn();
 
                     VMA *pClass = nullptr;
@@ -538,6 +534,16 @@ void EntityManager::ShowEditor(bool &active)
             });
 
             ImGui::EndTable();
+        }
+
+        if (ImGui::Begin("Entity Properties") )
+        {
+            Entity *entity = GetEntityPointer(selected_entity);
+            if (entity != nullptr)
+            {
+                entity->ShowEditor();
+            }
+            ImGui::End();
         }
 
         ImGui::End();

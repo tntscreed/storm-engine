@@ -6,11 +6,13 @@
 
 #include "core.h"
 #include "math3d.h"
-#include "sse.h"
 #include "math_inlines.h"
 #include "shared/sea_ai/script_defines.h"
+#include "sse.h"
 #include "tga.h"
 #include "v_file_service.h"
+
+#include <imgui.h>
 
 using storm::Sqr;
 
@@ -2027,4 +2029,38 @@ void SEA::RestoreRender()
     rs->CreateTexture(128, 128, 1, D3DUSAGE_RENDERTARGET, D3DFMT_R5G6B5, D3DPOOL_DEFAULT, &pReflection);
     rs->CreateTexture(128, 128, 1, D3DUSAGE_RENDERTARGET, D3DFMT_R5G6B5, D3DPOOL_DEFAULT, &pReflectionSunroad);
     rs->CreateDepthStencilSurface(128, 128, D3DFMT_D24S8, D3DMULTISAMPLE_NONE, &pReflectionSurfaceDepth);
+}
+
+void SEA::ShowEditor()
+{
+    ImGui::Text("Sea");
+    ImGui::DragFloat("Fresnel", &fFrenel, 0.005f, 0.0f, 1.0f, "%.3f");
+    ImGui::DragFloat("Attenuation", &v4SeaParameters.x, 0.005f, 0.0f, 1.0f, "%.3f");
+    ImGui::DragFloat("Reflection", &v4SeaParameters.y, 0.005f, 0.0f, 1.0f, "%.3f");
+    ImGui::DragFloat("Transparency", &v4SeaParameters.z, 0.005f, 0.0f, 1.0f, "%.3f");
+    ImGui::DragFloat("Max Sea Height", &fMaxSeaHeight, 0.005f, 0.0f, 1.0f, "%.3f");
+    ImGui::DragFloat("Max Sea Distance", &fMaxSeaDistance, 0.005f, 0.0f, 1.0f, "%.3f");
+    ImGui::DragFloat("Bump Scale", &fBumpScale, 0.005f, 0.0f, 1.0f, "%.3f");
+    ImGui::DragFloat("Bump Speed", &fBumpSpeed, 0.005f, 0.0f, 1.0f, "%.3f");
+
+    ImGui::ColorEdit4("Sea Color", (float*)&v4SeaColor, ImGuiColorEditFlags_NoInputs);
+    ImGui::ColorEdit4("Sky Color", (float*)&v4SkyColor, ImGuiColorEditFlags_NoInputs);
+
+    ImGui::DragFloat("Scale 1", &fScale1, 0.005f, 0.0f, 1.0f, "%.3f");
+    ImGui::DragFloat("Amplitude 1", &fAmp1, 0.005f, 0.0f, 1.0f, "%.3f");
+    ImGui::DragFloat("Animation Speed 1", &fAnimSpeed1, 0.005f, 0.0f, 1.0f, "%.3f");
+    float movement_speed_1[3] = {vMoveSpeed1.x, vMoveSpeed1.y, vMoveSpeed1.z};
+    ImGui::DragFloat3("Movement Speed 1", movement_speed_1, 0.005f, 0.0f, 1.0f, "%.3f");
+    vMoveSpeed1.x = movement_speed_1[0];
+    vMoveSpeed1.y = movement_speed_1[1];
+    vMoveSpeed1.z = movement_speed_1[2];
+
+    ImGui::DragFloat("Scale 2", &fScale2, 0.005f, 0.0f, 1.0f, "%.3f");
+    ImGui::DragFloat("Amplitude 2", &fAmp2, 0.005f, 0.0f, 1.0f, "%.3f");
+    ImGui::DragFloat("Animation Speed 2", &fAnimSpeed2, 0.005f, 0.0f, 1.0f, "%.3f");
+    float movement_speed_2[3] = {vMoveSpeed2.x, vMoveSpeed2.y, vMoveSpeed2.z};
+    ImGui::DragFloat3("Movement Speed 2", movement_speed_2, 0.005f, 0.0f, 1.0f, "%.3f");
+    vMoveSpeed2.x = movement_speed_2[0];
+    vMoveSpeed2.y = movement_speed_2[1];
+    vMoveSpeed2.z = movement_speed_2[2];
 }

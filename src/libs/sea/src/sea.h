@@ -9,7 +9,7 @@
 #include "vma.hpp"
 
 
-class SEA : public SEA_BASE
+class SEA final : public SEA_BASE
 {
   private:
     // uint32_t dwSkyCode = MakeHashValue("sky");
@@ -228,4 +228,6 @@ class SEA : public SEA_BASE
 
     void LostRender();
     void RestoreRender();
+
+    void ShowEditor() override;
 };
