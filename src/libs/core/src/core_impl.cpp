@@ -130,6 +130,16 @@ void CoreImpl::InitializeEditor(IDirect3DDevice9 *device)
     editor_ = std::make_unique<storm::editor::EngineEditor>(GetWindow()->SDLHandle(), device);
 }
 
+bool CoreImpl::IsEditorEnabled()
+{
+    return isEditorEnabled_;
+}
+
+void CoreImpl::EnableEditor(bool enable)
+{
+    isEditorEnabled_ = enable;
+}
+
 void CoreImpl::InitBase()
 {
     LoadClassesTable();

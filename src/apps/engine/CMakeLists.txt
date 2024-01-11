@@ -34,6 +34,7 @@ STORM_SETUP(
     sentry-native
     ${SDL2_LIBRARIES}
     zlib
+    cli11
 
     # system
     ${SYSTEM_DEPS}

@@ -806,7 +806,10 @@ bool DX9RENDER::InitDevice(bool windowed, HWND _hwnd, int32_t width, int32_t hei
     effects_.setDevice(d3d9);
 #endif
 
-    core.InitializeEditor(d3d9);
+    if (core.IsEditorEnabled() )
+    {
+        core.InitializeEditor(d3d9);
+    }
 
     // Create render targets for POST PROCESS effects
     d3d9->GetRenderTarget(0, &pOriginalScreenSurface);

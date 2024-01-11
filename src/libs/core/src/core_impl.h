@@ -15,6 +15,8 @@ class CoreImpl final : public CorePrivate
   public:
     void Init() override;
     void InitializeEditor(IDirect3DDevice9 *device) override;
+    bool IsEditorEnabled() override;
+    void EnableEditor(bool enable) override;
 
     void InitBase() override;
     void ReleaseBase() override;
@@ -169,6 +171,7 @@ private:
     char gstring[MAX_PATH]{}; // general purpose string
     bool State_loading;
     bool bEnableTimeScale{};
+    bool isEditorEnabled_ = false;
 
     SERVICES_LIST Services_List; // list for subsequent calls RunStart/RunEnd service functions
 

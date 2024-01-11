@@ -4,6 +4,7 @@
 #include <mimalloc-new-delete.h>
 #include <mimalloc.h>
 #include <spdlog/spdlog.h>
+#include <CLI/CLI.hpp>
 
 #include "core_private.h"
 #include "fs.h"
@@ -120,6 +121,20 @@ void HandleWindowEvent(const storm::OSWindow::Event &event)
 
 int main(int argc, char *argv[])
 {
+    CLI::App app("Storm Engine");
+
+    bool enable_editor = false;
+    app.add_flag("--editor", enable_editor, "Enable in-game editor");
+
+    try
+    {
+        app.parse(argc, argv);
+    }
+    catch (const CLI::ParseError &e)
+    {
+        return app.exit(e);
+    }
+
     // Prevent multiple instances
 #ifdef _WIN32 // CreateEventA
     if (!CreateEventA(nullptr, false, false, "Global\\FBBD2286-A9F1-4303-B60C-743C3D7AA7BE") ||
@@ -171,6 +186,7 @@ int main(int argc, char *argv[])
 
     // Init core
     core_private = static_cast<CorePrivate *>(&core);
+    core_private->EnableEditor(enable_editor);
     core_private->Init();
 
     // Read config

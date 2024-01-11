@@ -54,6 +54,7 @@ class Core
     virtual ~Core() = default;
 
     virtual void InitializeEditor(IDirect3DDevice9 *device) = 0;
+    virtual bool IsEditorEnabled() = 0;
 
     // return application window
     virtual storm::OSWindow *GetWindow() = 0;
