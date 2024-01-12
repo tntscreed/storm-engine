@@ -2,11 +2,13 @@ if (NOT WIN32)
     set(SYSTEM_DEPS "${NATIVE_D3D9_LIBS}")
 endif()
 
+set(IMGUI_BINGINDS_DIR "${CONAN_IMGUI_ROOT}/res/bindings")
+
 add_library(imgui_backend STATIC
-    "${CONAN_SRC_DIRS_IMGUI}/imgui_impl_sdl2.cpp"
+    "${IMGUI_BINGINDS_DIR}/imgui_impl_sdl2.cpp"
 )
 if (WIN32)
-    target_sources(imgui_backend PRIVATE "${CONAN_SRC_DIRS_IMGUI}/imgui_impl_dx9.cpp")
+    target_sources(imgui_backend PRIVATE "${IMGUI_BINGINDS_DIR}/imgui_impl_dx9.cpp")
 endif()
 
 target_include_directories(imgui_backend PUBLIC ${CONAN_SRC_DIRS_IMGUI})
