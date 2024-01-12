@@ -2,7 +2,7 @@ if (NOT WIN32)
     set(SYSTEM_DEPS "${NATIVE_D3D9_LIBS}")
 endif()
 
-set(IMGUI_BINGINDS_DIR "${CONAN_IMGUI_ROOT}/res/bindings")
+set(IMGUI_BINGINDS_DIR "${CMAKE_BINARY_DIR}/imgui")
 
 add_library(imgui_backend STATIC
     "${IMGUI_BINGINDS_DIR}/imgui_impl_sdl2.cpp"

@@ -71,6 +71,11 @@ class StormEngine(ConanFile):
             else:
                 self.__install_bin("mimalloc.dll")
 
+            self.__copy_imgui_binding("imgui_impl_sdl2.cpp")
+            self.__copy_imgui_binding("imgui_impl_sdl2.h")
+            self.__copy_imgui_binding("imgui_impl_dx9.cpp")
+            self.__copy_imgui_binding("imgui_impl_dx9.h")
+
         else: # not Windows
             if self.settings.build_type == "Debug":
                 self.__install_lib("libfmodL.so.13")
@@ -115,3 +120,6 @@ class StormEngine(ConanFile):
 
     def __install_folder(self, src, dst):
         copy_tree(self.recipe_folder + src, self.__dest + dst)
+
+    def __copy_imgui_binding(self, name):
+        self.copy(name, dst=str(self.options.output_directory) + "/imgui", src="res/bindings")
