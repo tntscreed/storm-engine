@@ -3,9 +3,12 @@ if (NOT WIN32)
 endif()
 
 add_library(imgui_backend STATIC
-    "${CONAN_SRC_DIRS_IMGUI}/imgui_impl_dx9.cpp"
     "${CONAN_SRC_DIRS_IMGUI}/imgui_impl_sdl2.cpp"
 )
+if (WIN32)
+    target_sources(imgui_backend PRIVATE "${CONAN_SRC_DIRS_IMGUI}/imgui_impl_dx9.cpp")
+endif()
+
 target_include_directories(imgui_backend PUBLIC ${CONAN_SRC_DIRS_IMGUI})
 target_link_libraries(imgui_backend PUBLIC imgui ${SDL2_LIBRARIES} ${SYSTEM_DEPS})
 
