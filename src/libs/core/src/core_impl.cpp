@@ -318,9 +318,7 @@ void CoreImpl::ProcessEngineIniFile()
 
             if (iScriptVersion != ENGINE_SCRIPT_VERSION)
             {
-#ifdef _WIN32 // FIX_LINUX Cursor
-                ShowCursor(true);
-#endif
+                GetWindow()->ShowCursor(true);
                 SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error", "Wrong script version", nullptr);
                 Compiler->ExitProgram();
             }

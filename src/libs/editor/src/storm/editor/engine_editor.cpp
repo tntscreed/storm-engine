@@ -1,5 +1,7 @@
 #include "storm/editor/engine_editor.hpp"
 
+#include "core.h"
+
 #include <imgui.h>
 #include <imgui_impl_dx9.h>
 #include <imgui_impl_sdl2.h>
@@ -54,14 +56,8 @@ EngineEditor::~EngineEditor()
 void EngineEditor::StartFrame()
 {
     const auto &io = ImGui::GetIO();
-    const bool is_focused = io.WantCaptureKeyboard;
-    if (is_focused != impl_->isFocused_)
-    {
-#ifdef WIN32
-      ShowCursor(is_focused);
-#endif
-    }
-    impl_->isFocused_ =  is_focused;
+    impl_->isFocused_ = io.WantCaptureKeyboard;
+    core.GetWindow()->ShowCursor(impl_->isFocused_);
 
     ImGui_ImplDX9_NewFrame();
     ImGui_ImplSDL2_NewFrame();
