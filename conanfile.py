@@ -53,6 +53,12 @@ class StormEngine(ConanFile):
         self.__install_folder("/src/techniques", "/resource/techniques")
         self.__install_folder("/src/libs/shared_headers/include/shared", "/resource/shared")
 
+        self.__copy_imgui_binding("imgui_impl_sdl2.cpp")
+        self.__copy_imgui_binding("imgui_impl_sdl2.h")
+        if self.settings.os == "Windows":
+            self.__copy_imgui_binding("imgui_impl_dx9.cpp")
+            self.__copy_imgui_binding("imgui_impl_dx9.h")
+
         if self.settings.os == "Windows":
             if self.settings.build_type == "Debug":
                 self.__install_lib("fmodL.dll")
@@ -70,11 +76,6 @@ class StormEngine(ConanFile):
                 self.__install_bin("mimalloc-debug.dll")
             else:
                 self.__install_bin("mimalloc.dll")
-
-            self.__copy_imgui_binding("imgui_impl_sdl2.cpp")
-            self.__copy_imgui_binding("imgui_impl_sdl2.h")
-            self.__copy_imgui_binding("imgui_impl_dx9.cpp")
-            self.__copy_imgui_binding("imgui_impl_dx9.h")
 
         else: # not Windows
             if self.settings.build_type == "Debug":

@@ -11,7 +11,7 @@ if (WIN32)
     target_sources(imgui_backend PRIVATE "${IMGUI_BINGINDS_DIR}/imgui_impl_dx9.cpp")
 endif()
 
-target_include_directories(imgui_backend PUBLIC ${CONAN_SRC_DIRS_IMGUI})
+target_include_directories(imgui_backend PUBLIC ${IMGUI_BINGINDS_DIR})
 target_link_libraries(imgui_backend PUBLIC imgui ${SDL2_LIBRARIES} ${SYSTEM_DEPS})
 
 STORM_SETUP(
