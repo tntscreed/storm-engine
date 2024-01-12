@@ -3,13 +3,13 @@
 #include "core.h"
 
 #include <imgui.h>
-#include <imgui_impl_dx9.h>
 #include <imgui_impl_sdl2.h>
 
 #include <array>
 
 #ifdef WIN32
 #include <Windows.h>
+#include <imgui_impl_dx9.h>
 #endif WIN32
 
 namespace storm::editor
@@ -45,7 +45,9 @@ EngineEditor::EngineEditor(SDL_Window *window, IDirect3DDevice9 *device)
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
     ImGui_ImplSDL2_InitForD3D(window);
+#ifdef WIN32
     ImGui_ImplDX9_Init(device);
+#endif WIN32
 }
 
 EngineEditor::~EngineEditor()
@@ -59,7 +61,9 @@ void EngineEditor::StartFrame()
     impl_->isFocused_ = io.WantCaptureKeyboard;
     core.GetWindow()->ShowCursor(impl_->isFocused_);
 
+#ifdef WIN32
     ImGui_ImplDX9_NewFrame();
+#endif WIN32
     ImGui_ImplSDL2_NewFrame();
     ImGui::NewFrame();
     if (ImGui::Begin("Developer Tools", NULL, ImGuiWindowFlags_MenuBar) )
@@ -103,7 +107,9 @@ void EngineEditor::StartFrame()
 void EngineEditor::EndFrame()
 {
     ImGui::Render();
+#ifdef WIN32
     ImGui_ImplDX9_RenderDrawData(ImGui::GetDrawData());
+#endif WIN32
 }
 
 void EngineEditor::ProcessEvent(SDL_Event &event)

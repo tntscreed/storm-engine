@@ -1,5 +1,5 @@
 from conans import ConanFile, tools
-from os import getenv, path
+from os import getenv
 from random import getrandbits
 from distutils.dir_util import copy_tree
 
