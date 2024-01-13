@@ -13,7 +13,6 @@
 #include "v_s_stack.h"
 
 #include <fmt/chrono.h>
-#include <imgui_impl_dx9.h>
 #include <SDL_timer.h>
 
 #include <algorithm>
