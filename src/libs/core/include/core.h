@@ -14,6 +14,8 @@
 #include "v_data.h"
 #include "v_file_service.h"
 
+#include <storm/editor/engine_editor.hpp>
+
 struct IFUNCINFO;
 
 struct ScreenSize
@@ -50,6 +52,9 @@ class Core
 {
   public:
     virtual ~Core() = default;
+
+    virtual void InitializeEditor(IDirect3DDevice9 *device) = 0;
+    virtual bool IsEditorEnabled() = 0;
 
     // return application window
     virtual storm::OSWindow *GetWindow() = 0;
@@ -130,6 +135,8 @@ class Core
     virtual hash_t GetClassCode(entid_t id) const = 0;
     virtual bool IsLayerFrozen(layer_index_t index) const = 0;
     virtual void ForEachEntity(const std::function<void(entptr_t)> &f) = 0;
+
+    [[nodiscard]] virtual storm::editor::EngineEditor *GetEditor() = 0;
 
     CONTROLS *Controls{};
 };

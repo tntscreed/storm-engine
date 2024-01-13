@@ -1115,11 +1115,8 @@ void SoundService::CreateEntityIfNeed()
 
 void SoundService::DebugDraw()
 {
-    if (core.Controls->GetDebugAsyncKeyState('J') < 0)
-    {
-        bShowDebugInfo = !bShowDebugInfo;
-        std::this_thread::sleep_for(std::chrono::milliseconds(200));
-    }
+    const auto *editor = core.GetEditor();
+    bShowDebugInfo = editor != nullptr && editor->IsDebugFlagEnabled(storm::editor::DebugFlag::SoundDebug);
 
     if (!bShowDebugInfo)
         return;
