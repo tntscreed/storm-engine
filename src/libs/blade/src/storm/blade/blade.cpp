@@ -1,9 +1,10 @@
-#include "blade.h"
+#include "storm\blade\blade.hpp"
 
 #include "animation.h"
 #include "core.h"
 #include "geometry.h"
 #include "shared/messages.h"
+#include "string_compare.hpp"
 
 #include <storm/editor/storm_imgui.hpp>
 
@@ -18,11 +19,12 @@ static const char *gunHandName = "gun_hand";
 static const char *gunBeltName = "gun_belt";
 static const char *gunFire = "gun_fire";
 
-static const char *sabergunHandName = "sabergun_hand";
-static const char *sabergunBeltName = "sabergun_belt";
+static const char *sabergunHandName = "saberGun_hand";
+static const char *sabergunBeltName = "saberGun_belt";
 
 BLADE::BLADE_INFO::BLADE_INFO()
-    : parentEntityId_(0)
+    : id_("saber")
+    , parentEntityId_(0)
     , vrt{}
 {
     locatorName_ = beltName;
@@ -212,8 +214,10 @@ BLADE::BLADE()
 
     blades_[0].locatorName_ = beltName;
     blades_[0].locatorNameActive_ = handName;
+    blades_[0].id_ = "saber";
     blades_[1].locatorName_ = sabergunBeltName;
     blades_[1].locatorNameActive_ = sabergunHandName;
+    blades_[1].id_ = "saberGun";
 }
 
 BLADE::~BLADE()
@@ -724,4 +728,39 @@ void BLADE::ShowEditor()
     ImGui::InputText("Locator", &gunLocator_);
     ImGui::InputText("Active locator", &gunLocatorActive_);
     ImGui::PopID();
+}
+
+void BLADE::SetEquipmentLocator(const std::string_view &equipment_id, const std::string_view &locator_name)
+{
+    if (storm::iEquals(equipment_id, "gun") )
+    {
+        gunLocator_ = locator_name;
+    }
+    else
+    {
+        for (auto &blade : blades_)
+        {
+            if (storm::iEquals(equipment_id, blade.id_) )
+            {
+                blade.locatorName_ = locator_name;
+            }
+        }
+    }
+}
+void BLADE::SetEquipmentActiveLocator(const std::string_view &equipment_id, const std::string_view &locator_name)
+{
+    if (storm::iEquals(equipment_id, "gun") )
+    {
+        gunLocatorActive_ = locator_name;
+    }
+    else
+    {
+        for (auto &blade : blades_)
+        {
+            if (storm::iEquals(equipment_id, blade.id_) )
+            {
+                blade.locatorNameActive_ = locator_name;
+            }
+        }
+    }
 }

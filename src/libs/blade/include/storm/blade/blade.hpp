@@ -34,6 +34,7 @@ class BLADE : public Entity
         void DrawBlade(VDX9RENDER *rs, unsigned int blendValue, MODEL *mdl, NODE *manNode);
         bool LoadBladeModel(MESSAGE &message);
 
+        std::string id_;
         std::string locatorName_;
         std::string locatorNameActive_;
 
@@ -105,6 +106,9 @@ class BLADE : public Entity
 
     void Realize(uint32_t Delta_Time);
     uint64_t ProcessMessage(MESSAGE &message) override;
+
+    void SetEquipmentLocator(const std::string_view &equipment_id, const std::string_view &locator_name);
+    void SetEquipmentActiveLocator(const std::string_view &equipment_id, const std::string_view &locator_name);
 
     void ShowEditor() override;
 };

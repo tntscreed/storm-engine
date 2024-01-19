@@ -485,3 +485,22 @@ void ATTRIBUTES::Release() const noexcept
     if (break_)
         stringCodec_.VariableChanged();
 }
+
+// MatchAttributePath("equipment.*.locator", attribute)
+bool MatchAttributePath(const std::string_view &pattern, const ATTRIBUTES &attribute)
+{
+    const ATTRIBUTES *current_attribute = &attribute;
+    std::string_view remaining_pattern = pattern;
+    size_t last_separator = remaining_pattern.size();
+    while(last_separator != pattern.npos)
+    {
+        last_separator = remaining_pattern.find_last_of('.');
+        std::string_view section = remaining_pattern.substr( last_separator + 1);
+        remaining_pattern = remaining_pattern.substr(0, last_separator);
+        if (section != "*" && !storm::iEquals(section, current_attribute->GetThisName() ) ) {
+            return false;
+        }
+        current_attribute = current_attribute->GetParent();
+    }
+    return current_attribute != nullptr && current_attribute->GetParent() == nullptr;
+}
