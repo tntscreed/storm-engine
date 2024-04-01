@@ -39,25 +39,5 @@ inline std::optional<path> GetDefaultStashPath()
     return path;
 }
 
-inline path GetStashPath()
-{
-    return GetDefaultStashPath().value_or(std::filesystem::current_path());
-}
-
-inline path GetLogsPath()
-{
-    return GetStashPath() / "Logs";
-}
-
-inline path GetSaveDataPath()
-{
-    return GetStashPath() / "SaveData";
-}
-
-inline path GetScreenshotsPath()
-{
-    return GetStashPath() / "Screenshots";
-}
-
 constexpr char ENGINE_INI_FILE_NAME[] = "engine.ini";
 } // namespace fs
