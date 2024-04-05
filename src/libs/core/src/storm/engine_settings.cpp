@@ -35,8 +35,7 @@ std::filesystem::path EngineSettings::GetEnginePath(EngineSettingsPathType type)
         return stashFolder_ / "sentry-db";
     }
     default:
-        // TODO: Log warning
-        return {};
+        throw std::runtime_error("Unknown engine settings path");
     }
 }
 
