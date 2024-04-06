@@ -7,6 +7,7 @@
 #include "fs.h"
 #include "math_inlines.h"
 #include "s_import_func.h"
+#include "storm/engine_settings.hpp"
 #include "storm/font_loading.hpp"
 #include "string_compare.hpp"
 #include "texture.h"
@@ -482,7 +483,7 @@ bool DX9RENDER::Init()
     d3d = nullptr;
     d3d9 = nullptr;
 
-    create_directories(fs::GetScreenshotsPath());
+    create_directories(storm::GetEngineSettings().GetEnginePath(storm::EngineSettingsPathType::Screenshots));
 
     auto ini = fio->OpenIniFile(core.EngineIniFileName());
     if (ini)
@@ -3263,7 +3264,7 @@ void DX9RENDER::MakeScreenShot()
     }
 
     const auto screenshot_base_filename = fmt::format("{:%Y-%m-%d_%H-%M-%S}", fmt::localtime(std::time(nullptr)));
-    auto screenshot_path = fs::GetScreenshotsPath() / screenshot_base_filename;
+    auto screenshot_path = storm::GetEngineSettings().GetEnginePath(storm::EngineSettingsPathType::Screenshots) / screenshot_base_filename;
     screenshot_path.replace_extension(screenshotExt);
     for(size_t i = 0; exists(screenshot_path); ++i)
     {

@@ -6,12 +6,13 @@
 #include <spdlog/spdlog.h>
 
 #include "core_private.h"
+#include "fs.h"
 #include "lifecycle_diagnostics_service.hpp"
 #include "logging.hpp"
 #include "os_window.hpp"
 #include "steam_api.hpp"
+#include "storm/engine_settings.hpp"
 #include "v_sound_service.h"
-#include "fs.h"
 #include "watermark.hpp"
 
 namespace
@@ -60,7 +61,7 @@ void mimalloc_fun(const char *msg, void *arg)
     static std::filesystem::path mimalloc_log_path;
     if (mimalloc_log_path.empty())
     {
-        mimalloc_log_path = fs::GetLogsPath() / "mimalloc.log";
+        mimalloc_log_path =storm::GetEngineSettings().GetEnginePath(storm::EngineSettingsPathType::Logs) / "mimalloc.log";
         std::error_code ec;
         remove(mimalloc_log_path, ec);
     }
@@ -162,7 +163,7 @@ int main(int argc, char *argv[])
     }
 
     // Init stash
-    create_directories(fs::GetSaveDataPath());
+    create_directories(storm::GetEngineSettings().GetEnginePath(storm::EngineSettingsPathType::SaveData));
 
     // Init logging
     spdlog::set_default_logger(storm::logging::getOrCreateLogger(defaultLoggerName));
