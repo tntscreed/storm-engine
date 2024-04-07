@@ -30,8 +30,6 @@ ISLAND::~ISLAND()
 
 void ISLAND::Uninit()
 {
-    STORM_DELETE(pDepthMap);
-
     if (!bForeignModels)
     {
         core.EraseEntity(model_id);
@@ -404,13 +402,13 @@ bool ISLAND::CreateHeightMap(const std::string_view &pDir, const std::string_vie
         {
             fio->_ReadFile(fileS, &tga_head, sizeof(tga_head));
             iDMapSize = tga_head.width;
-            pDepthMap = new uint8_t[iDMapSize * iDMapSize];
-            fio->_ReadFile(fileS, pDepthMap, iDMapSize * iDMapSize);
+            pDepthMap.resize(iDMapSize * iDMapSize);
+            fio->_ReadFile(fileS, pDepthMap.data(), pDepthMap.size());
             fio->_CloseFile(fileS);
 
             mzDepth.DoZip(pDepthMap, iDMapSize);
             mzDepth.Save(fileName + ".zap");
-            STORM_DELETE(pDepthMap);
+            pDepthMap.clear();
             bLoad = true;
         }
     }
@@ -470,7 +468,7 @@ bool ISLAND::CreateHeightMap(const std::string_view &pDir, const std::string_vie
     fStep1divDX = 1.0f / fStepDX;
     fStep1divDZ = 1.0f / fStepDZ;
 
-    pDepthMap = new uint8_t[iDMapSize * iDMapSize];
+    pDepthMap.resize(iDMapSize * iDMapSize);
 
     float fEarthPercent = 0.0f;
     float fX, fZ;
@@ -524,11 +522,11 @@ bool ISLAND::CreateHeightMap(const std::string_view &pDir, const std::string_vie
     vBoxSize /= 2.0f;
     vRealBoxSize /= 2.0f;
 
-    SaveTga8((char *)fileName.c_str(), pDepthMap, iDMapSize, iDMapSize);
+    SaveTga8((char *)fileName.c_str(), pDepthMap.data(), iDMapSize, iDMapSize);
 
     mzDepth.DoZip(pDepthMap, iDMapSize);
     mzDepth.Save(fileName + ".zap");
-    STORM_DELETE(pDepthMap);
+    pDepthMap.clear();
 
     auto pI = fio->OpenIniFile(iniName.c_str());
     if (!pI)

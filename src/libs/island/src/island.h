@@ -5,37 +5,9 @@
 #include "dx9render.h"
 #include "geometry.h"
 #include "island_base.h"
+#include "map_zipper.hpp"
 #include "model.h"
 #include "vma.hpp"
-
-class MapZipper
-{
-  private:
-    uint32_t dwSizeX;
-    uint32_t dwDX;
-    uint32_t dwBlockSize, dwBlockShift;
-    uint32_t dwShiftNumBlocksX;
-    uint32_t dwNumRealBlocks;
-
-    uint16_t *pWordTable;
-    uint8_t *pRealData;
-
-  public:
-    MapZipper();
-    ~MapZipper();
-
-    uint32_t GetSizeX()
-    {
-        return dwSizeX;
-    };
-
-    void UnInit();
-    void DoZip(uint8_t *pSrc, uint32_t dwSizeX);
-    uint8_t Get(uint32_t dwX, uint32_t dwY);
-
-    bool Save(std::string sFileName);
-    bool Load(std::string sFileName);
-};
 
 class ISLAND : public ISLAND_BASE
 {
@@ -158,10 +130,9 @@ class ISLAND : public ISLAND_BASE
 
     float fDepthHeight[256]{};
 
-    MapZipper mzShadow;
     MapZipper mzDepth;
 
-    uint8_t *pDepthMap = nullptr;
+    std::vector<uint8_t> pDepthMap;
 
     VDX9RENDER *pRS = nullptr;
     VGEOMETRY *pGS = nullptr;
