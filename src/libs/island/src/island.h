@@ -1,10 +1,10 @@
 #pragma once
 
 #include "ai_flow_graph.h"
-#include "island_base.h"
 #include "collide.h"
 #include "dx9render.h"
 #include "geometry.h"
+#include "island_base.h"
 #include "model.h"
 #include "vma.hpp"
 
@@ -35,89 +35,12 @@ class MapZipper
 
     bool Save(std::string sFileName);
     bool Load(std::string sFileName);
-
-    bool isLoaded()
-    {
-        return pRealData != nullptr;
-    }
 };
 
 class ISLAND : public ISLAND_BASE
 {
-  private:
-    std::string sIslandName;
-    std::vector<entid_t> aSpheres;
-    std::vector<entid_t> aForts;
-    AIFlowGraph AIPath;
-    entid_t AIFortEID{};
-
-    FRECT rIsland;
-    bool bForeignModels;
-    bool bDrawReflections;
-    float fStepDX, fStepDZ, fStep1divDX, fStep1divDZ;
-    float fShadowMapSize, fShadowMapStep;
-    CVECTOR vBoxSize, vBoxCenter, vRealBoxSize;
-    uint32_t iDMapSize, iDMapSizeShift;
-    entid_t model_id, seabed_id;
-
-    bool bFirstRealize;
-    bool dynamicLightsOn; 		//dynamic lighting
-
-    std::string cModelsDir, cModelsID, cFoamDir;
-
-    float fDepthHeight[256];
-
-    MapZipper mzShadow, mzDepth;
-
-    uint8_t *pDepthMap;
-    uint8_t *pShadowMap;
-
-    VDX9RENDER *pRS;
-    VGEOMETRY *pGS;
-    COLLIDE *pCollide;
-
-    CMatrix mIslandOld, mSeaBedOld;
-    float fImmersionDepth, fImmersionDistance;
-    float fCurrentImmersion;
-
-    void Blur8(uint8_t **pBuffer, uint32_t dwSize);
-    bool SaveTga8(char *fname, uint8_t *pBuffer, uint32_t dwSizeX, uint32_t dwSizeY);
-
-    // shadow map section
-    bool CreateShadowMap(char *pDir, char *pName);
-    float GetShadowTemp(int32_t iX, int32_t iZ);
-
-    // depth map section
-    bool CreateHeightMap(const std::string_view &pDir, const std::string_view &pName);
-    bool ActivateCamomileTrace(CVECTOR &vSrc);
-    inline float GetDepthCheck(uint32_t iX, uint32_t iZ);
-    inline float GetDepthNoCheck(uint32_t iX, uint32_t iZ);
-
-    bool Mount(const std::string_view &fname, const std::string_view &fdir, entid_t *eID);
-    void Uninit();
-
-    void CalcBoxParameters(CVECTOR &vBoxCenter, CVECTOR &vBoxSize);
-
-    void SetName(const std::string_view &pIslandName)
-    {
-        sIslandName = pIslandName;
-    };
-
-    char *GetName()
-    {
-        return (char *)sIslandName.c_str();
-    };
-
-    void AddLocationModel(entid_t eid, const std::string_view &pIDStr, const std::string_view &pStr);
-
-    // debug
-    // dead code
-    /*void DoZapSuperGenerator();
-    void DoZapSuperGeneratorInnerDecodeFiles(const char *sub_dir, const char *mask);
-    bool DoZapSuperGeneratorDecodeFile(const char *sname);*/
-
   public:
-    ISLAND();
+    ISLAND() = default;
     ~ISLAND() override;
     bool Init() override;
     void Realize(uint32_t Delta_Time);
@@ -139,13 +62,13 @@ class ISLAND : public ISLAND_BASE
         }
     }
 
-    void Move();
     void SetDevice();
 
     // inherit functions COLLISION_OBJECT
     float Trace(const CVECTOR &src, const CVECTOR &dst) override;
 
-    bool Clip(const PLANE *planes, int32_t nplanes, const CVECTOR &center, float radius, ADD_POLYGON_FUNC addpoly) override
+    bool Clip(const PLANE *planes, int32_t nplanes, const CVECTOR &center, float radius,
+              ADD_POLYGON_FUNC addpoly) override
     {
         return false;
     };
@@ -166,25 +89,88 @@ class ISLAND : public ISLAND_BASE
     // inherit functions ISLAND_BASE
     bool GetMovePoint(CVECTOR &vSrc, CVECTOR &vDst, CVECTOR &vRes) override;
 
-    entid_t GetModelEID()
+    entid_t GetModelEID() override
     {
         return model_id;
     };
 
-    entid_t GetSeabedEID()
+    entid_t GetSeabedEID() override
     {
         return seabed_id;
     };
 
-    bool Check2DBoxDepth(CVECTOR vPos, CVECTOR vSize, float fAngY, float fMinDepth);
-    bool GetDepth(float x, float z, float *fRes = nullptr);
-    bool GetDepthFast(float x, float z, float *fRes = nullptr);
-    bool GetDepth(FRECT *pRect, float *fMinH, float *fMaxH);
+    bool Check2DBoxDepth(CVECTOR vPos, CVECTOR vSize, float fAngY, float fMinDepth) override;
+    bool GetDepth(float x, float z, float *fRes) override;
+    bool GetDepthFast(float x, float z, float *fRes) override;
 
-    bool GetShadow(float x, float z, float *fRes = nullptr);
+    void ShowEditor() override;
 
-    float GetCurrentImmersion()
+  private:
+    bool SaveTga8(char *fname, uint8_t *pBuffer, uint32_t dwSizeX, uint32_t dwSizeY);
+
+    // depth map section
+    bool CreateHeightMap(const std::string_view &pDir, const std::string_view &pName);
+    bool ActivateCamomileTrace(CVECTOR &vSrc);
+    inline float GetDepthNoCheck(uint32_t iX, uint32_t iZ);
+
+    bool Mount(const std::string_view &fname, const std::string_view &fdir, entid_t *eID);
+    void Uninit();
+
+    void CalcBoxParameters(CVECTOR &vBoxCenter, CVECTOR &vBoxSize);
+
+    void SetName(const std::string_view &pIslandName)
     {
-        return fCurrentImmersion;
+        sIslandName = pIslandName;
     };
+
+    char *GetName()
+    {
+        return (char *)sIslandName.c_str();
+    };
+
+    void AddLocationModel(entid_t eid, const std::string_view &pIDStr, const std::string_view &pStr);
+
+    std::string sIslandName;
+    std::vector<entid_t> aForts;
+    AIFlowGraph AIPath;
+    entid_t AIFortEID{};
+
+    FRECT rIsland{};
+    bool bForeignModels = false;
+    bool bDrawReflections = false;
+    float fStepDX{};
+    float fStepDZ{};
+    float fStep1divDX{};
+    float fStep1divDZ{};
+    CVECTOR vBoxSize{};
+    CVECTOR vBoxCenter{};
+    CVECTOR vRealBoxSize{};
+    uint32_t iDMapSize{};
+    uint32_t iDMapSizeShift{};
+    entid_t model_id = invalid_entity;
+    entid_t seabed_id = invalid_entity;
+
+    bool dynamicLightsOn = false; // dynamic lighting
+
+    std::string cModelsDir;
+    std::string cModelsID;
+    std::string cFoamDir;
+
+    float fDepthHeight[256]{};
+
+    MapZipper mzShadow;
+    MapZipper mzDepth;
+
+    uint8_t *pDepthMap = nullptr;
+
+    VDX9RENDER *pRS = nullptr;
+    VGEOMETRY *pGS = nullptr;
+    COLLIDE *pCollide = nullptr;
+
+    CMatrix mIslandOld;
+    float fImmersionDepth{};
+    float fImmersionDistance{};
+    float fCurrentImmersion{};
+
+    bool enableDebugView_ = false;
 };
