@@ -45,127 +45,133 @@ BLADE::BLADE_INFO::~BLADE_INFO()
 void BLADE::BLADE_INFO::DrawBlade(VDX9RENDER *rs, unsigned int blendValue, MODEL *mdl, NODE *manNode)
 {
     auto *obj = static_cast<MODEL *>(core.GetEntityPointer(parentEntityId_));
-    if (obj != nullptr)
+    if (obj == nullptr)
     {
-        CMatrix perMtx;
+        return;
+    }
 
-        auto *bladeNode = obj->GetNode(0);
-        if ((blendValue & 0xff000000) == 0xff000000)
-        {
-            bladeNode->SetTechnique("EnvAmmoShader");
-        }
-        else
-        {
-            bladeNode->SetTechnique("AnimationBlend");
-        }
-        int32_t sti = -1;
-        const std::string &locator_name = active_ ? locatorNameActive_ : locatorName_;
+    auto *bladeNode = obj->GetNode(0);
+    if (bladeNode == nullptr)
+    {
+        return;
+    }
+
+    CMatrix perMtx;
+    if ((blendValue & 0xff000000) == 0xff000000)
+    {
+        bladeNode->SetTechnique("EnvAmmoShader");
+    }
+    else
+    {
+        bladeNode->SetTechnique("AnimationBlend");
+    }
+    int32_t sti = -1;
+    const std::string &locator_name = active_ ? locatorNameActive_ : locatorName_;
         auto idBlade = manNode->geo->FindName(locator_name.c_str() );
 
-        if ((sti = manNode->geo->FindLabelN(sti + 1, idBlade)) > -1)
-        {
-            auto *ani = mdl->GetAnimation();
-            auto *bones = &ani->GetAnimationMatrix(0);
+    if ((sti = manNode->geo->FindLabelN(sti + 1, idBlade)) > -1)
+    {
+        auto *ani = mdl->GetAnimation();
+        auto *bones = &ani->GetAnimationMatrix(0);
 
-            GEOS::LABEL lb;
-            manNode->geo->GetLabel(sti, lb);
-            CMatrix mt;
-            mt.Vx() = CVECTOR(lb.m[0][0], lb.m[0][1], lb.m[0][2]);
-            mt.Vy() = CVECTOR(lb.m[1][0], lb.m[1][1], lb.m[1][2]);
-            mt.Vz() = CVECTOR(lb.m[2][0], lb.m[2][1], lb.m[2][2]);
-            mt.Pos() = CVECTOR(lb.m[3][0], lb.m[3][1], lb.m[3][2]);
-
-            auto mbn = mt * bones[lb.bones[0]];
-#ifndef _WIN32 // FIX_LINUX DirectXMath
-            mbn.Pos().x *= -1.0f;
-            mbn.Vx().x *= -1.0f;
-            mbn.Vy().x *= -1.0f;
-            mbn.Vz().x *= -1.0f;
-#endif
-            CMatrix scl;
-            scl.Vx().x = -1.0f;
-            scl.Vy().y = 1.0f;
-            scl.Vz().z = 1.0f;
-            mbn.EqMultiply(scl, CMatrix(mbn));
-
-            perMtx = mbn * mdl->mtx;
-        }
-        obj->mtx = perMtx;
-        obj->ProcessStage(Stage::realize, 0);
-
-        //--------------------------------------------------------------------------
-        rs->SetTexture(0, nullptr);
-        rs->SetTransform(D3DTS_WORLD, CMatrix());
-
-        // move to the beginning
-        int32_t first = 0; // end vertex 2 draw
-        for (int32_t v = WAY_LENGTH - 2; v > -1; v--)
-        {
-            vrt[v * 2 + 2] = vrt[v * 2 + 0];
-            vrt[v * 2 + 3] = vrt[v * 2 + 1];
-            vrtTime[v + 1] = vrtTime[v + 0];
-
-            if (vrtTime[v + 1] + lifeTime <= time)
-                continue;
-
-            first++;
-
-            auto blend = (time - vrtTime[v + 1]) / lifeTime;
-
-            auto fcol0 = static_cast<float>((color[0] >> 24) & 0xFF);
-            auto fcol1 = static_cast<float>((color[1] >> 24) & 0xFF);
-            auto a = static_cast<uint32_t>(fcol0 + blend * (fcol1 - fcol0));
-
-            fcol0 = static_cast<float>((color[0] >> 16) & 0xFF);
-            fcol1 = static_cast<float>((color[1] >> 16) & 0xFF);
-            auto r = static_cast<uint32_t>(fcol0 + blend * (fcol1 - fcol0));
-
-            fcol0 = static_cast<float>((color[0] >> 8) & 0xFF);
-            fcol1 = static_cast<float>((color[1] >> 8) & 0xFF);
-            auto g = static_cast<uint32_t>(fcol0 + blend * (fcol1 - fcol0));
-
-            fcol0 = static_cast<float>((color[0] >> 0) & 0xFF);
-            fcol1 = static_cast<float>((color[1] >> 0) & 0xFF);
-            auto b = static_cast<uint32_t>(fcol0 + blend * (fcol1 - fcol0));
-
-            vrt[v * 2 + 2].diffuse = vrt[v * 2 + 3].diffuse = (a << 24) | (r << 16) | (g << 8) | b;
-        }
-
-        // search for start
-        sti = bladeNode->geo->FindLabelN(0, bladeNode->geo->FindName(bladeStart));
         GEOS::LABEL lb;
+        manNode->geo->GetLabel(sti, lb);
+        CMatrix mt;
+        mt.Vx() = CVECTOR(lb.m[0][0], lb.m[0][1], lb.m[0][2]);
+        mt.Vy() = CVECTOR(lb.m[1][0], lb.m[1][1], lb.m[1][2]);
+        mt.Vz() = CVECTOR(lb.m[2][0], lb.m[2][1], lb.m[2][2]);
+        mt.Pos() = CVECTOR(lb.m[3][0], lb.m[3][1], lb.m[3][2]);
+
+        auto mbn = mt * bones[lb.bones[0]];
+#ifndef _WIN32 // FIX_LINUX DirectXMath
+        mbn.Pos().x *= -1.0f;
+        mbn.Vx().x *= -1.0f;
+        mbn.Vy().x *= -1.0f;
+        mbn.Vz().x *= -1.0f;
+#endif
+        CMatrix scl;
+        scl.Vx().x = -1.0f;
+        scl.Vy().y = 1.0f;
+        scl.Vz().z = 1.0f;
+        mbn.EqMultiply(scl, CMatrix(mbn));
+
+        perMtx = mbn * mdl->mtx;
+    }
+    obj->mtx = perMtx;
+    obj->ProcessStage(Stage::realize, 0);
+
+    //--------------------------------------------------------------------------
+    rs->SetTexture(0, nullptr);
+    rs->SetTransform(D3DTS_WORLD, CMatrix());
+
+    // move to the beginning
+    int32_t first = 0; // end vertex 2 draw
+    for (int32_t v = WAY_LENGTH - 2; v > -1; v--)
+    {
+        vrt[v * 2 + 2] = vrt[v * 2 + 0];
+        vrt[v * 2 + 3] = vrt[v * 2 + 1];
+        vrtTime[v + 1] = vrtTime[v + 0];
+
+        if (vrtTime[v + 1] + lifeTime <= time)
+            continue;
+
+        first++;
+
+        auto blend = (time - vrtTime[v + 1]) / lifeTime;
+
+        auto fcol0 = static_cast<float>((color[0] >> 24) & 0xFF);
+        auto fcol1 = static_cast<float>((color[1] >> 24) & 0xFF);
+        auto a = static_cast<uint32_t>(fcol0 + blend * (fcol1 - fcol0));
+
+        fcol0 = static_cast<float>((color[0] >> 16) & 0xFF);
+        fcol1 = static_cast<float>((color[1] >> 16) & 0xFF);
+        auto r = static_cast<uint32_t>(fcol0 + blend * (fcol1 - fcol0));
+
+        fcol0 = static_cast<float>((color[0] >> 8) & 0xFF);
+        fcol1 = static_cast<float>((color[1] >> 8) & 0xFF);
+        auto g = static_cast<uint32_t>(fcol0 + blend * (fcol1 - fcol0));
+
+        fcol0 = static_cast<float>((color[0] >> 0) & 0xFF);
+        fcol1 = static_cast<float>((color[1] >> 0) & 0xFF);
+        auto b = static_cast<uint32_t>(fcol0 + blend * (fcol1 - fcol0));
+
+        vrt[v * 2 + 2].diffuse = vrt[v * 2 + 3].diffuse = (a << 24) | (r << 16) | (g << 8) | b;
+    }
+
+    // search for start
+    sti = bladeNode->geo->FindLabelN(0, bladeNode->geo->FindName(bladeStart));
+    GEOS::LABEL lb;
+    if (sti >= 0)
+    {
+        bladeNode->geo->GetLabel(sti, lb);
+        vrt[0].pos = perMtx * CVECTOR(lb.m[3][0], lb.m[3][1], lb.m[3][2]);
+        vrt[0].diffuse = color[0];
+        sti = bladeNode->geo->FindLabelN(0, bladeNode->geo->FindName(bladeEnd));
         if (sti >= 0)
         {
             bladeNode->geo->GetLabel(sti, lb);
-            vrt[0].pos = perMtx * CVECTOR(lb.m[3][0], lb.m[3][1], lb.m[3][2]);
-            vrt[0].diffuse = color[0];
-            sti = bladeNode->geo->FindLabelN(0, bladeNode->geo->FindName(bladeEnd));
-            if (sti >= 0)
-            {
-                bladeNode->geo->GetLabel(sti, lb);
-                vrt[1].pos = perMtx * CVECTOR(lb.m[3][0], lb.m[3][1], lb.m[3][2]);
-                vrt[1].diffuse = color[0];
-                vrtTime[0] = time;
+            vrt[1].pos = perMtx * CVECTOR(lb.m[3][0], lb.m[3][1], lb.m[3][2]);
+            vrt[1].diffuse = color[0];
+            vrtTime[0] = time;
 
-                auto bDraw = rs->TechniqueExecuteStart("Blade");
-                if (bDraw)
-                {
-                    if (first > 0)
-                        rs->DrawPrimitiveUP(D3DPT_TRIANGLESTRIP, FVF, first * 2, &vrt[0], sizeof vrt[0]);
-                }
-                while (rs->TechniqueExecuteNext())
-                {
-                }
-            }
-            else
+            auto bDraw = rs->TechniqueExecuteStart("Blade");
+            if (bDraw)
             {
-                core.Trace("BLADE::Realize -> no find locator \"%s\", model \"%s\"", bladeEnd, bladeNode->GetName());
+                if (first > 0)
+                    rs->DrawPrimitiveUP(D3DPT_TRIANGLESTRIP, FVF, first * 2, &vrt[0], sizeof vrt[0]);
+            }
+            while (rs->TechniqueExecuteNext())
+            {
             }
         }
         else
         {
-            core.Trace("BLADE::Realize -> no find locator \"%s\", model \"%s\"", bladeStart, bladeNode->GetName());
+            core.Trace(R"(BLADE::Realize -> no find locator "%s", model "%s")", bladeEnd, bladeNode->GetName());
         }
+    }
+    else
+    {
+        core.Trace(R"(BLADE::Realize -> no find locator "%s", model "%s")", bladeStart, bladeNode->GetName());
     }
 }
 
@@ -278,13 +284,16 @@ void BLADE::Realize(uint32_t Delta_Time)
     if (obj != nullptr)
     {
         auto *gunNode = obj->GetNode(0);
-        if ((blendValue & 0xff000000) == 0xff000000)
+        if (gunNode != nullptr)
         {
-            gunNode->SetTechnique("EnvAmmoShader");
-        }
-        else
-        {
-            gunNode->SetTechnique("AnimationBlend");
+            if ((blendValue & 0xff000000) == 0xff000000)
+            {
+                gunNode->SetTechnique("EnvAmmoShader");
+            }
+            else
+            {
+                gunNode->SetTechnique("AnimationBlend");
+            }
         }
         sti = -1;
         const std::string &gun_locator = isGunActive_ ? gunLocatorActive_ : gunLocator_;

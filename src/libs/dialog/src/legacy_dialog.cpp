@@ -136,6 +136,12 @@ LegacyDialog::~LegacyDialog() noexcept
     {
         RenderService->TextureRelease(interfaceTexture_);
     }
+
+    if (headModel_ != invalid_entity)
+    {
+        core.EraseEntity(headModel_);
+        headModel_ = invalid_entity;
+    }
 }
 
 bool LegacyDialog::Init()
@@ -778,9 +784,24 @@ void LegacyDialog::ProcessControls()
             if (selected_attr)
             {
                 const char *go = selected_attr->GetAttribute("go");
+                if (go == nullptr) {
+                    core.Trace("LegacyDialog: Invalid 'go' attribute, emergency exit!");
+                    EmergencyExit();
+                    return;
+                }
                 AttributesPointer->SetAttribute("CurrentNode", go);
                 core.Event("DialogEvent");
             }
+            else {
+                core.Trace("LegacyDialog: Invalid selected link, emergency exit!");
+                EmergencyExit();
+                return;
+            }
+        }
+        else {
+            core.Trace("LegacyDialog: Invalid links, emergency exit!");
+            EmergencyExit();
+            return;
         }
     }
 }
@@ -815,4 +836,14 @@ void LegacyDialog::SetTickSound()
     else {
         tickSound_ = DEFAULT_TICK_SOUND;
     }
+}
+
+void LegacyDialog::EmergencyExit()
+{
+    if (forceEmergencyClose_)
+    {
+        return;
+    }
+    forceEmergencyClose_ = true;
+    core.Event("EmergencyDialogExit");
 }

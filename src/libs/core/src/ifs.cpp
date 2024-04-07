@@ -1150,11 +1150,22 @@ storm::Data IFS::ToData()
     auto *section_node = SectionRoot;
     while (section_node)
     {
-        const bool in_section = section_node->GetName() != nullptr;
-        if (in_section) {
-            result.emplace(section_node->GetName(), storm::Data{});
-        }
-        auto& section = in_section ? result[section_node->GetName()] : result;
+        auto &section = ([&]() -> storm::Data& {
+            const bool in_section = section_node->GetName() != nullptr;
+            if (in_section)
+            {
+                const auto section_name = std::string(section_node->GetName());
+                if (result.contains(section_name) && !result[section_name].is_object() ) {
+                    result.erase(section_name);
+                }
+                result.emplace(section_name, storm::Data{});
+                return result[section_name];
+            }
+            else
+            {
+                return result;
+            }
+        })();
         auto *node = section_node->GetRoot();
         while (node)
         {
