@@ -1,24 +1,17 @@
-/******************************************************************************
-File:  blade.cpp
-
-Author:   Nick Chirkov
-
-Comments:
-model binded to an animated locator
-******************************************************************************/
-#include "blade.h"
+#include "storm\blade\blade.hpp"
 
 #include "animation.h"
 #include "core.h"
 #include "geometry.h"
 #include "shared/messages.h"
+#include "string_compare.hpp"
+
+#include <storm/editor/storm_imgui.hpp>
 
 CREATE_CLASS(BLADE)
 
-static const char *handName = "Saber_hand";
-static const char *beltName = "Saber_belt";
-static const char *bloodName = "Saber_blood";
-static const char *lightName = "Saber_light";
+static const char *handName = "saber_hand";
+static const char *beltName = "saber_belt";
 static const char *bladeStart = "start";
 static const char *bladeEnd = "end";
 
@@ -26,14 +19,15 @@ static const char *gunHandName = "gun_hand";
 static const char *gunBeltName = "gun_belt";
 static const char *gunFire = "gun_fire";
 
-static const char *sabergunHandName = "sabergun_hand";
-static const char *sabergunBeltName = "sabergun_belt";
-static const char *sabergunFire = "sabersabgun_fire";
+static const char *sabergunHandName = "saberGun_hand";
+static const char *sabergunBeltName = "saberGun_belt";
 
 BLADE::BLADE_INFO::BLADE_INFO()
-    : eid(0), vrt{}
+    : id_("saber")
+    , parentEntityId_(0)
+    , vrt{}
 {
-    locatorName = beltName;
+    locatorName_ = beltName;
     defLifeTime = 0.15f;
     lifeTime = 0.0f;
     color[0] = 0x80162EBE;
@@ -45,12 +39,12 @@ BLADE::BLADE_INFO::BLADE_INFO()
 
 BLADE::BLADE_INFO::~BLADE_INFO()
 {
-    core.EraseEntity(eid);
+    core.EraseEntity(parentEntityId_);
 }
 
 void BLADE::BLADE_INFO::DrawBlade(VDX9RENDER *rs, unsigned int blendValue, MODEL *mdl, NODE *manNode)
 {
-    auto *obj = static_cast<MODEL *>(core.GetEntityPointer(eid));
+    auto *obj = static_cast<MODEL *>(core.GetEntityPointer(parentEntityId_));
     if (obj != nullptr)
     {
         CMatrix perMtx;
@@ -65,7 +59,8 @@ void BLADE::BLADE_INFO::DrawBlade(VDX9RENDER *rs, unsigned int blendValue, MODEL
             bladeNode->SetTechnique("AnimationBlend");
         }
         int32_t sti = -1;
-        auto idBlade = manNode->geo->FindName(locatorName);
+        const std::string &locator_name = active_ ? locatorNameActive_ : locatorName_;
+        auto idBlade = manNode->geo->FindName(locator_name.c_str() );
 
         if ((sti = manNode->geo->FindLabelN(sti + 1, idBlade)) > -1)
         {
@@ -176,7 +171,7 @@ void BLADE::BLADE_INFO::DrawBlade(VDX9RENDER *rs, unsigned int blendValue, MODEL
 
 bool BLADE::BLADE_INFO::LoadBladeModel(MESSAGE &message)
 {
-    core.EraseEntity(eid);
+    core.EraseEntity(parentEntityId_);
 
     // model name
     const std::string &mdlName = message.String();
@@ -191,10 +186,10 @@ bool BLADE::BLADE_INFO::LoadBladeModel(MESSAGE &message)
         if (gs)
             gs->SetTexturePath("Ammo\\");
         // Create a model
-        eid = core.CreateEntity("modelr");
-        if (!core.Send_Message(eid, "ls", MSG_MODEL_LOAD_GEO, path))
+        parentEntityId_ = core.CreateEntity("modelr");
+        if (!core.Send_Message(parentEntityId_, "ls", MSG_MODEL_LOAD_GEO, path))
         {
-            core.EraseEntity(eid);
+            core.EraseEntity(parentEntityId_);
             if (gs)
                 gs->SetTexturePath("");
             return false;
@@ -213,8 +208,16 @@ bool BLADE::BLADE_INFO::LoadBladeModel(MESSAGE &message)
 
 BLADE::BLADE()
 {
-    gunLocName = gunBeltName;
+    gunLocator_ = gunBeltName;
+    gunLocatorActive_ = gunHandName;
     blendValue = 0xFFFFFFFF;
+
+    blades_[0].locatorName_ = beltName;
+    blades_[0].locatorNameActive_ = handName;
+    blades_[0].id_ = "saber";
+    blades_[1].locatorName_ = sabergunBeltName;
+    blades_[1].locatorNameActive_ = sabergunHandName;
+    blades_[1].id_ = "saberGun";
 }
 
 BLADE::~BLADE()
@@ -248,7 +251,7 @@ bool BLADE::Init()
 //------------------------------------------------------------------------------------
 void BLADE::Realize(uint32_t Delta_Time)
 {
-    blade[0].time += 0.001f * (Delta_Time);
+    blades_[0].time += 0.001f * (Delta_Time);
 
     auto *mdl = static_cast<MODEL *>(core.GetEntityPointer(man));
     if (!mdl)
@@ -284,7 +287,8 @@ void BLADE::Realize(uint32_t Delta_Time)
             gunNode->SetTechnique("AnimationBlend");
         }
         sti = -1;
-        auto idGun = manNode->geo->FindName(gunLocName);
+        const std::string &gun_locator = isGunActive_ ? gunLocatorActive_ : gunLocator_;
+        auto idGun = manNode->geo->FindName(gun_locator.c_str());
 
         if ((sti = manNode->geo->FindLabelN(sti + 1, idGun)) > -1)
         {
@@ -321,14 +325,18 @@ void BLADE::Realize(uint32_t Delta_Time)
 
     //------------------------------------------------------
     // draw saber
-    blade[0].DrawBlade(rs, blendValue, mdl, manNode);
-    blade[1].DrawBlade(rs, blendValue, mdl, manNode);
+    blades_[0].DrawBlade(rs, blendValue, mdl, manNode);
+    blades_[1].DrawBlade(rs, blendValue, mdl, manNode);
 
     //------------------------------------------------------
     // draw tied items
     for (int32_t n = 0; n < ITEMS_INFO_QUANTITY; n++)
+    {
         if (items[n].nItemIndex != -1)
+        {
             items[n].DrawItem(rs, blendValue, mdl, manNode);
+        }
+    }
 
     mtx.SetIdentity();
     rs->SetTransform(D3DTS_TEXTURE1, mtx);
@@ -337,17 +345,23 @@ void BLADE::Realize(uint32_t Delta_Time)
 bool BLADE::LoadBladeModel(MESSAGE &message)
 {
     const auto nBladeIdx = message.Long();
-    if (nBladeIdx < 0 || nBladeIdx >= BLADE_INFO_QUANTITY)
+    if (nBladeIdx < 0 || nBladeIdx >= blades_.size())
+    {
         return false;
+    }
 
     man = message.EntityID();
 
     if (nBladeIdx == 1)
-        blade[nBladeIdx].locatorName = sabergunBeltName;
+    {
+        blades_[nBladeIdx].locatorName_ = sabergunBeltName;
+    }
     else
-        blade[nBladeIdx].locatorName = beltName;
+    {
+        blades_[nBladeIdx].locatorName_ = beltName;
+    }
 
-    return blade[nBladeIdx].LoadBladeModel(message);
+    return blades_[nBladeIdx].LoadBladeModel(message);
 }
 
 bool BLADE::LoadGunModel(MESSAGE &message)
@@ -393,20 +407,20 @@ void BLADE::GunFire()
     CMatrix perMtx;
     int32_t sti;
 
-    const char *currentGunLocName = gunLocName;
+    std::string currentGunLocName = isGunActive_ ? gunLocatorActive_ : gunLocator_;
 
     auto *obj = static_cast<MODEL *>(core.GetEntityPointer(gun));
     if (obj == nullptr) // no pistol - look for saber pistol
     {
-        obj = static_cast<MODEL *>(core.GetEntityPointer(blade[1].eid));
-        currentGunLocName = blade[1].locatorName;
+        obj = static_cast<MODEL *>(core.GetEntityPointer(blades_[1].parentEntityId_));
+        currentGunLocName = blades_[1].locatorName_;
     }
 
     if (obj != nullptr)
     {
         auto *gunNode = obj->GetNode(0);
         sti = -1;
-        auto idGun = manNode->geo->FindName(currentGunLocName);
+        auto idGun = manNode->geo->FindName(currentGunLocName.c_str() );
 
         if ((sti = manNode->geo->FindLabelN(sti + 1, idGun)) > -1)
         {
@@ -441,8 +455,8 @@ void BLADE::GunFire()
             resm.EqMultiply(perMtx, *(CMatrix *)&lb.m);
             auto rp = perMtx * CVECTOR(lb.m[3][0], lb.m[3][1], lb.m[3][2]);
 
-            core.Send_Message(core.GetEntityId("particles"), "lsffffffl", PS_CREATEX, "gunfire", rp.x, rp.y,
-                              rp.z, resm.Vz().x, resm.Vz().y, resm.Vz().z, 0);
+            core.Send_Message(core.GetEntityId("particles"), "lsffffffl", PS_CREATEX, "gunfire", rp.x, rp.y, rp.z,
+                              resm.Vz().x, resm.Vz().y, resm.Vz().z, 0);
         }
         else
             core.Trace("MSG_BLADE_GUNFIRE Can't find gun_fire locator");
@@ -451,97 +465,85 @@ void BLADE::GunFire()
 
 uint64_t BLADE::ProcessMessage(MESSAGE &message)
 {
-    int32_t n;
+    int32_t n{};
 
     switch (message.Long())
     {
-    case MSG_BLADE_SET:
+    case MSG_BLADE_SET: {
         return LoadBladeModel(message);
-        break;
+    }
 
-    case MSG_BLADE_BELT:
+    case MSG_BLADE_BELT: {
         n = message.Long();
-        if (n == 0)
+        if (n < blades_.size())
         {
-            blade[n].locatorName = beltName;
-            blade[n].lifeTime = 0.0f;
+            blades_[n].active_ = false;
+            blades_[n].lifeTime = 0.0f;
         }
-        else if (n == 1)
-        {
-            blade[n].locatorName = sabergunBeltName;
-            blade[n].lifeTime = 0.0f;
-        }
-        // core.Trace("MSG_BLADE_BELT::%s", beltName);
         break;
+    }
 
-    case MSG_BLADE_HAND:
+    case MSG_BLADE_HAND: {
         n = message.Long();
-        if (n == 0)
+        if (n < blades_.size())
         {
-            blade[n].locatorName = handName;
+            blades_[n].active_ = true;
         }
-        else if (n == 1)
-        {
-            blade[n].locatorName = sabergunHandName;
-        }
-        // core.Trace("MSG_BLADE_HAND::%s", handName);
         break;
+    }
 
-    case MSG_BLADE_GUNSET:
+    case MSG_BLADE_GUNSET: {
         return LoadGunModel(message);
+    }
+    case MSG_BLADE_GUNBELT: {
+        isGunActive_ = false;
         break;
-    case MSG_BLADE_GUNBELT:
-        gunLocName = gunBeltName;
-        // core.Trace("MSG_BLADE_GUNBELT::%s", gunLocName);
+    }
+    case MSG_BLADE_GUNHAND: {
+        isGunActive_ = true;
         break;
-    case MSG_BLADE_GUNHAND:
-        gunLocName = gunHandName;
-        // core.Trace("MSG_BLADE_GUNHAND::%s", gunLocName);
-        break;
-    case MSG_BLADE_GUNFIRE:
+    }
+    case MSG_BLADE_GUNFIRE: {
         GunFire();
-        // core.Trace("MSG_BLADE_GUNFIRE::%s", handName);
         break;
+    }
 
-    case MSG_BLADE_TRACE_ON:
+    case MSG_BLADE_TRACE_ON: {
         n = message.Long();
-        if (n >= 0 && n < BLADE_INFO_QUANTITY)
+        if (n >= 0 && n < blades_.size())
         {
-            blade[0].lifeTime = blade[0].defLifeTime;
+            blades_[n].lifeTime = blades_[n].defLifeTime;
         }
-        // core.Trace("MSG_BLADE_TRACE_ON::%f", lifeTime);
         break;
+    }
 
-    case MSG_BLADE_TRACE_OFF:
+    case MSG_BLADE_TRACE_OFF: {
         n = message.Long();
-        if (n >= 0 && n < BLADE_INFO_QUANTITY)
+        if (n >= 0 && n < blades_.size())
         {
-            blade[0].lifeTime = 0.0f;
+            blades_[n].lifeTime = 0.0f;
         }
-        // core.Trace("MSG_BLADE_TRACE_OFF");
         break;
+    }
 
-    case MSG_BLADE_BLOOD:
-        // core.Trace("MSG_BLADE_BLOOD");
-        break;
-
-    case MSG_BLADE_LIGHT:
-        // core.Trace("MSG_BLADE_LIGHT");
-        break;
-    case MSG_BLADE_ALPHA:
+    case MSG_BLADE_ALPHA: {
         blendValue = message.Long();
         break;
+    }
 
-    case 1001:
+    case 1001: {
         man = message.EntityID();
         AddTieItem(message);
         break;
-    case 1002:
+    }
+    case 1002: {
         DelTieItem(message);
         break;
-    case 1003:
+    }
+    case 1003: {
         DelAllTieItem();
         break;
+    }
     }
     return 0;
 }
@@ -700,4 +702,65 @@ bool BLADE::TIEITEM_INFO::LoadItemModel(const char *mdlName, const char *locName
         gs->SetTexturePath("");
 
     return true;
+}
+
+void BLADE::ShowEditor()
+{
+    ImGui::Text("Blade");
+    ImGui::InputScalar("Parent entity", ImGuiDataType_U64, &man);
+
+    size_t i = 0;
+    for (auto &blade : blades_)
+    {
+        ImGui::TextFmt("Blade {}", i++);
+        std::string id = fmt::format("Blade {}", i);
+        ImGui::PushID(id.c_str());
+        ImGui::Checkbox("Equipped", &blade.active_);
+        ImGui::InputText("Locator", &blade.locatorName_);
+        ImGui::InputText("Active locator", &blade.locatorNameActive_);
+        ImGui::PopID();
+    }
+
+    ImGui::TextFmt("Gun {}", i++);
+    std::string id = fmt::format("Blade {}", i);
+    ImGui::PushID(id.c_str());
+    ImGui::Checkbox("Equipped", &isGunActive_);
+    ImGui::InputText("Locator", &gunLocator_);
+    ImGui::InputText("Active locator", &gunLocatorActive_);
+    ImGui::PopID();
+}
+
+void BLADE::SetEquipmentLocator(const std::string_view &equipment_id, const std::string_view &locator_name)
+{
+    if (storm::iEquals(equipment_id, "gun") )
+    {
+        gunLocator_ = locator_name;
+    }
+    else
+    {
+        for (auto &blade : blades_)
+        {
+            if (storm::iEquals(equipment_id, blade.id_) )
+            {
+                blade.locatorName_ = locator_name;
+            }
+        }
+    }
+}
+void BLADE::SetEquipmentActiveLocator(const std::string_view &equipment_id, const std::string_view &locator_name)
+{
+    if (storm::iEquals(equipment_id, "gun") )
+    {
+        gunLocatorActive_ = locator_name;
+    }
+    else
+    {
+        for (auto &blade : blades_)
+        {
+            if (storm::iEquals(equipment_id, blade.id_) )
+            {
+                blade.locatorNameActive_ = locator_name;
+            }
+        }
+    }
 }

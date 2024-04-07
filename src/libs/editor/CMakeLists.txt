@@ -6,6 +6,7 @@ set(IMGUI_BINGINDS_DIR "${CMAKE_BINARY_DIR}/imgui")
 
 add_library(imgui_backend STATIC
     "${IMGUI_BINGINDS_DIR}/imgui_impl_sdl2.cpp"
+    "${IMGUI_BINGINDS_DIR}/imgui_stdlib.cpp"
 )
 if (WIN32)
     target_sources(imgui_backend PRIVATE "${IMGUI_BINGINDS_DIR}/imgui_impl_dx9.cpp")
