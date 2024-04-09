@@ -310,7 +310,7 @@ KEY_NODE *SECTION::GetRoot()
 
 //=============================================================================================================
 
-IFS::IFS(VFILE_SERVICE *_fs)
+IFS::IFS(FILE_SERVICE *_fs)
 {
     fs = _fs;
     FileName = nullptr;

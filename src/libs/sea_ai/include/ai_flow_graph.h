@@ -3,7 +3,7 @@
 #include "core.h"
 #include "c_vector.h"
 #include "storm_assert.h"
-#include "v_file_service.h"
+#include "file_service.h"
 #include "math_inlines.h"
 
 #include <algorithm>

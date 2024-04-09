@@ -12,7 +12,6 @@
 #define SECTION_B ']'
 #define INI_EQUAL '='
 #define VOIDSYMS_NUM 2
-#define INI_SIGNATURE ";[SE2IF]"
 const char INI_LINEFEED[3] = {0xd, 0xa, 0};
 const char INI_VOIDSYMS[VOIDSYMS_NUM] = {0x20, 0x9};
 
@@ -21,7 +20,7 @@ namespace
 FILE_SERVICE file_service;
 }
 
-extern VFILE_SERVICE *fio = &file_service;
+extern FILE_SERVICE *fio = &file_service;
 
 void FILE_SERVICE::FlushIniFiles()
 {
@@ -197,14 +196,6 @@ std::vector<std::filesystem::path> FILE_SERVICE::_GetFsPathsByMask(const char *s
         }
         return iter_directory(it, mask, getPaths, onlyDirs, onlyFiles);
     }
-}
-
-std::time_t FILE_SERVICE::_ToTimeT(std::filesystem::file_time_type tp)
-{
-    using namespace std::chrono;
-    auto sctp = time_point_cast<system_clock::duration>(tp - std::filesystem::file_time_type::clock::now() +
-                                                        system_clock::now());
-    return system_clock::to_time_t(sctp);
 }
 
 std::filesystem::file_time_type FILE_SERVICE::_GetLastWriteTime(const char *filename)

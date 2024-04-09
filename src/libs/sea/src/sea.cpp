@@ -10,7 +10,7 @@
 #include "shared/sea_ai/script_defines.h"
 #include "sse.h"
 #include "tga.h"
-#include "v_file_service.h"
+#include "file_service.h"
 
 #include <imgui.h>
 

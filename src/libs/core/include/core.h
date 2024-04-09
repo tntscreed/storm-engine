@@ -12,7 +12,7 @@
 #include "platform/platform.hpp"
 #include "shared/layers.h"
 #include "v_data.h"
-#include "v_file_service.h"
+#include "file_service.h"
 
 #include <storm/editor/engine_editor.hpp>
 

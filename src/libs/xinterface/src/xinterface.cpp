@@ -1000,7 +1000,10 @@ uint64_t XINTERFACE::ProcessMessage(MESSAGE &message)
             }
             else
             {
-                systTime = fio->_ToTimeT(fio->_GetLastWriteTime(param.c_str()));
+                const auto tp = fio->_GetLastWriteTime(param.c_str());
+                auto sctp = time_point_cast<std::chrono::system_clock::duration>(tp - std::filesystem::file_time_type::clock::now() +
+                                                                    std::chrono::system_clock::now());
+                systTime = std::chrono::system_clock::to_time_t(sctp);
             }
         }
         const auto locTime = std::localtime(&systTime);
