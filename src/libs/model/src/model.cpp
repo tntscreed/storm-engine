@@ -7,6 +7,8 @@
 #include <DirectXMath.h>
 #endif
 
+#include <storm/editor/storm_imgui.hpp>
+
 CREATE_CLASS(MODELR)
 
 IDirect3DVertexBuffer9 *dest_vb;
@@ -753,4 +755,12 @@ void MODELR::RestoreRender()
     if (nAniVerts)
         rs->CreateVertexBuffer(sizeof(GEOS::VERTEX0) * nAniVerts, D3DUSAGE_WRITEONLY | D3DUSAGE_DYNAMIC, fvf,
                                D3DPOOL_DEFAULT, &d3dDestVB);
+}
+
+void MODELR::ShowEditor()
+{
+    ImGui::Text("Model");
+    if (root != nullptr) {
+        root->ShowEditorTree();
+    }
 }

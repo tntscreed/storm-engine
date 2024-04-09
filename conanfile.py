@@ -55,6 +55,8 @@ class StormEngine(ConanFile):
 
         self.__copy_imgui_binding("imgui_impl_sdl2.cpp")
         self.__copy_imgui_binding("imgui_impl_sdl2.h")
+        self.__copy_imgui_misc("imgui_stdlib.cpp")
+        self.__copy_imgui_misc("imgui_stdlib.h")
         if self.settings.os == "Windows":
             self.__copy_imgui_binding("imgui_impl_dx9.cpp")
             self.__copy_imgui_binding("imgui_impl_dx9.h")
@@ -124,3 +126,6 @@ class StormEngine(ConanFile):
 
     def __copy_imgui_binding(self, name):
         self.copy(name, dst=str(self.options.output_directory) + "/imgui", src="res/bindings")
+
+    def __copy_imgui_misc(self, name):
+        self.copy(name, dst=str(self.options.output_directory) + "/imgui", src="res/misc/cpp")

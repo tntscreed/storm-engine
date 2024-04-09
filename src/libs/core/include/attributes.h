@@ -22,6 +22,10 @@ class VSTRING_CODEC
     virtual void VariableChanged() = 0;
 };
 
+class ATTRIBUTES;
+
+bool MatchAttributePath(const std::string_view &pattern, const ATTRIBUTES &attribute);
+
 class ATTRIBUTES final
 {
     // TODO: remove with another iteration of rewriting this
@@ -137,4 +141,3 @@ private:
         proxy_value_t proxy_value_;
     };
 };
-
