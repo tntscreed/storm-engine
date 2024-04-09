@@ -14,6 +14,7 @@
 #include "fs.h"
 #include "logging.hpp"
 #include "script_cache.h"
+#include "storm/engine_settings.hpp"
 #include "storm_assert.h"
 
 #include <SDL_timer.h>
@@ -49,7 +50,7 @@ enum CacheMode : int
 
 auto GetCacheFolder()
 {
-    static std::filesystem::path cache_folder = fs::GetStashPath() / "Cache";
+    static std::filesystem::path cache_folder = storm::GetEngineSettings().GetEnginePath(storm::EngineSettingsPathType::ScriptCache);
     return cache_folder;
 }
 constexpr auto kCacheStateFile = "state";

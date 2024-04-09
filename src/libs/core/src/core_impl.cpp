@@ -774,7 +774,7 @@ void CoreImpl::Entity_SetAttributePointer(entid_t id_PTR, ATTRIBUTES *pA)
 
 uint32_t CoreImpl::Entity_AttributeChanged(entid_t id_PTR, ATTRIBUTES *pA)
 {
-    Entity *pE = GetEntityPointer(id_PTR);
+    Entity *pE = GetEntityPointerSafe(id_PTR);
     if (pE == nullptr)
         return 0;
     return pE->AttributeChanged(pA);

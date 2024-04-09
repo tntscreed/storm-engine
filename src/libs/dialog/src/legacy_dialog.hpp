@@ -67,6 +67,8 @@ class LegacyDialog final : public Entity
 
     void SetTickSound();
 
+    void EmergencyExit();
+
     storm::dialog::DlgLinkDescribe linkDescribe_;
 
     std::vector<std::string> formattedDialogText_;
@@ -108,4 +110,5 @@ class LegacyDialog final : public Entity
 
     bool dialogNeedsUpdate_ = false;
     bool backNeedsUpdate_ = true;
+    bool forceEmergencyClose_ = false;
 };

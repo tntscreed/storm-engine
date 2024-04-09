@@ -132,16 +132,10 @@ std::vector<std::string> FILE_SERVICE::_GetPathsOrFilenamesByMask(const char *so
 }
 
 template <typename DirIterator>
-std::vector<std::filesystem::path> iter_directory(DirIterator &it, std::error_code &ec, const char *mask,
+std::vector<std::filesystem::path> iter_directory(DirIterator &it, const char *mask,
                                                   bool getPaths, bool onlyDirs, bool onlyFiles)
 {
     std::vector<std::filesystem::path> result;
-
-    if (ec)
-    {
-        spdlog::warn("Failed to open save folder: {}", ec.message());
-        return result;
-    }
 
     std::filesystem::path curPath;
     for (auto &dirEntry : it)
@@ -186,12 +180,22 @@ std::vector<std::filesystem::path> FILE_SERVICE::_GetFsPathsByMask(const char *s
     if (recursive)
     {
         auto it = std::filesystem::recursive_directory_iterator(srcPath, ec);
-        return iter_directory(it, ec, mask, getPaths, onlyDirs, onlyFiles);
+        if (ec)
+        {
+            spdlog::warn("Failed to create recursive directory iterator for '{}': {}", srcPath.string(), ec.message());
+            return {};
+        }
+        return iter_directory(it, mask, getPaths, onlyDirs, onlyFiles);
     }
     else
     {
         auto it = std::filesystem::directory_iterator(srcPath, ec);
-        return iter_directory(it, ec, mask, getPaths, onlyDirs, onlyFiles);
+        if (ec)
+        {
+            spdlog::warn("Failed to create directory iterator for '{}': {}", srcPath.string(), ec.message());
+            return {};
+        }
+        return iter_directory(it, mask, getPaths, onlyDirs, onlyFiles);
     }
 }
 
