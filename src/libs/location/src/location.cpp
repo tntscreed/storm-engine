@@ -1017,7 +1017,7 @@ bool Location::IsExDebugView()
 bool Location::IsDebugView()
 {
     const auto *editor = core.GetEditor();
-    return editor != nullptr && editor->IsDebugFlagEnabled(storm::editor::DebugFlag::LocationDebug) || editor->IsDebugFlagEnabled(storm::editor::DebugFlag::ExtendedLocationDebug);
+    return editor != nullptr && (editor->IsDebugFlagEnabled(storm::editor::DebugFlag::LocationDebug) || editor->IsDebugFlagEnabled(storm::editor::DebugFlag::ExtendedLocationDebug) );
 }
 
 // Write text
