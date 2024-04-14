@@ -2569,10 +2569,9 @@ DATA *COMPILER::BC_CallIntFunction(uint32_t func_code, DATA *&pVResult, uint32_t
         }
         pA = pV->GetAClass();
 
-        std::sort(std::execution::seq, std::begin(pA->attributes_), std::end(pA->attributes_),
-                  [](const std::unique_ptr<ATTRIBUTES> &lhs, const std::unique_ptr<ATTRIBUTES> &rhs) {
-                      return strcmp(lhs->GetThisName(), rhs->GetThisName()) < 0;
-                  });
+        pA->Sort([](const std::unique_ptr<ATTRIBUTES> &lhs, const std::unique_ptr<ATTRIBUTES> &rhs) {
+            return strcmp(lhs->GetThisName(), rhs->GetThisName()) < 0;
+        });
 
         break;
     }

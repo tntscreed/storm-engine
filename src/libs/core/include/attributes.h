@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <functional>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -28,14 +29,9 @@ bool MatchAttributePath(const std::string_view &pattern, const ATTRIBUTES &attri
 
 class ATTRIBUTES final
 {
-    // TODO: remove with another iteration of rewriting this
-    friend class COMPILER;
-
     class LegacyProxy;
 
   public:
-    [[deprecated("Pass StringCodec by reference instead")]] explicit ATTRIBUTES(VSTRING_CODEC *p);
-
     explicit ATTRIBUTES(VSTRING_CODEC &p);
     ATTRIBUTES(const ATTRIBUTES &) = delete;
     ATTRIBUTES(ATTRIBUTES &&other) noexcept;
@@ -86,11 +82,12 @@ class ATTRIBUTES final
     void SetNameCode(uint32_t n) noexcept;
     [[nodiscard]] VSTRING_CODEC &GetStringCodec() const noexcept;
 
+    void Sort(const std::function<bool(const std::unique_ptr<ATTRIBUTES> &lhs, const std::unique_ptr<ATTRIBUTES> &rhs)>& pred);
+
 private:
     ATTRIBUTES(VSTRING_CODEC &string_codec, ATTRIBUTES *parent, const std::string_view &name);
     ATTRIBUTES(VSTRING_CODEC &string_codec, ATTRIBUTES *parent, uint32_t name_code);
 
-    void Release() const noexcept;
     ATTRIBUTES *CreateNewAttribute(uint32_t name_code);
 
     VSTRING_CODEC &stringCodec_;
