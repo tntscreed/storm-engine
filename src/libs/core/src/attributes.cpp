@@ -497,10 +497,14 @@ bool MatchAttributePath(const std::string_view &pattern, const ATTRIBUTES &attri
         last_separator = remaining_pattern.find_last_of('.');
         std::string_view section = remaining_pattern.substr( last_separator + 1);
         remaining_pattern = remaining_pattern.substr(0, last_separator);
+        const ATTRIBUTES *parent = current_attribute->GetParent();
+        if (parent == nullptr) {
+            return false;
+        }
         if (section != "*" && !storm::iEquals(section, current_attribute->GetThisName() ) ) {
             return false;
         }
-        current_attribute = current_attribute->GetParent();
+        current_attribute = parent;
     }
     return current_attribute != nullptr && current_attribute->GetParent() == nullptr;
 }
