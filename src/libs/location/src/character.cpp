@@ -998,7 +998,9 @@ uint32_t Character::AttributeChanged(ATTRIBUTES *apnt)
         // Updating the animation being played
         UpdateAnimation();
     }
-    else if (MatchAttributePath("equipment.*.locator", *apnt) )
+    // Engine crashes because attribute has no parent (orphaned)
+    // Disabled this code until we figure out how this can happen
+    else if (false && MatchAttributePath("equipment.*.locator", *apnt) )
     {
         if (isBladeSet)
         {
