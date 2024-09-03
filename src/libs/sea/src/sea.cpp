@@ -833,6 +833,11 @@ void SEA::SSE_WaveXZ(SeaVertex **pArray)
         pArray[2]->vNormal = vNormal[2];
         pArray[3]->vNormal = vNormal[3];
     }
+
+    pArray[0]->vPos.y += seaHeightOffset_;
+    pArray[1]->vPos.y += seaHeightOffset_;
+    pArray[2]->vPos.y += seaHeightOffset_;
+    pArray[3]->vPos.y += seaHeightOffset_;
 }
 
 float SEA::WaveXZ(float x, float z, CVECTOR *pNormal)
@@ -945,6 +950,8 @@ float SEA::WaveXZ(float x, float z, CVECTOR *pNormal)
 
         *pNormal = vNormal;
     }
+
+    fRes += seaHeightOffset_;
 
     return fRes;
 }
@@ -2038,6 +2045,7 @@ void SEA::ShowEditor()
     ImGui::DragFloat("Attenuation", &v4SeaParameters.x, 0.005f, 0.0f, 1.0f, "%.3f");
     ImGui::DragFloat("Reflection", &v4SeaParameters.y, 0.005f, 0.0f, 1.0f, "%.3f");
     ImGui::DragFloat("Transparency", &v4SeaParameters.z, 0.005f, 0.0f, 1.0f, "%.3f");
+    ImGui::DragFloat("Sea Height Offset", &seaHeightOffset_, 0.005f, -10.0f, 10.0f, "%.3f");
     ImGui::DragFloat("Max Sea Height", &fMaxSeaHeight, 0.005f, 0.0f, 1.0f, "%.3f");
     ImGui::DragFloat("Max Sea Distance", &fMaxSeaDistance, 0.005f, 0.0f, 1.0f, "%.3f");
     ImGui::DragFloat("Bump Scale", &fBumpScale, 0.005f, 0.0f, 1.0f, "%.3f");
