@@ -280,6 +280,7 @@ void CoreImpl::ProcessEngineIniFile()
     }
 
     loadCompatibilitySettings(*engine_ini);
+    determineScreenSize(*engine_ini);
 
     res = engine_ini->ReadString(nullptr, "run", String, sizeof(String), "");
     if (res)
@@ -290,7 +291,7 @@ void CoreImpl::ProcessEngineIniFile()
             throw std::runtime_error("fail to run program");
 
         // Script version test
-        if (targetVersion_ >= storm::ENGINE_VERSION::LATEST)
+        if (targetVersion_ == storm::ENGINE_VERSION::TO_EACH_HIS_OWN)
         {
             int32_t iScriptVersion = 0xFFFFFFFF;
             auto *pVScriptVersion = static_cast<VDATA *>(core_internal.GetScriptVariable("iScriptVersion"));
@@ -926,15 +927,7 @@ storm::ENGINE_VERSION CoreImpl::GetTargetEngineVersion() const noexcept
 
 ScreenSize CoreImpl::GetScreenSize() const noexcept
 {
-    switch (targetVersion_)
-    {
-    case storm::ENGINE_VERSION::PIRATES_OF_THE_CARIBBEAN: {
-        return {640, 480};
-    }
-    default: {
-        return {800, 600};
-    }
-    }
+    return screenSize_;
 }
 
 void CoreImpl::stopFrameProcessing()
@@ -1041,4 +1034,17 @@ void CoreImpl::loadCompatibilitySettings(INIFILE &inifile)
         spdlog::warn("Unknown target version '{}' in engine compatibility settings", target_engine_version);
         targetVersion_ = ENGINE_VERSION::LATEST;
     }
+}
+
+void CoreImpl::determineScreenSize(INIFILE &inifile)
+{
+    if (targetVersion_ <= storm::ENGINE_VERSION::PIRATES_OF_THE_CARIBBEAN) {
+        screenSize_ = {640, 480};
+    }
+    else {
+        screenSize_ = {800, 600};
+    }
+
+    screenSize_.width = inifile.GetInt("interface", "screen_width", screenSize_.width);
+    screenSize_.height = inifile.GetInt("interface", "screen_height", screenSize_.height);
 }

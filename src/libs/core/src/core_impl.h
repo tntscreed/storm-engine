@@ -148,10 +148,12 @@ class CoreImpl final : public CorePrivate
 
 private:
     void loadCompatibilitySettings(INIFILE &inifile);
+    void determineScreenSize(INIFILE &inifile);
 
     EntityManager entity_manager_;
 
     storm::ENGINE_VERSION targetVersion_ = storm::ENGINE_VERSION::LATEST;
+    ScreenSize screenSize_;
 
     bool stopFrameProcessing_ = false;
 
