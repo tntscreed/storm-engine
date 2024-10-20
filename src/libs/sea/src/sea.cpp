@@ -2071,4 +2071,10 @@ void SEA::ShowEditor()
     vMoveSpeed2.x = movement_speed_2[0];
     vMoveSpeed2.y = movement_speed_2[1];
     vMoveSpeed2.z = movement_speed_2[2];
+
+    // Fog
+    ImGui::Checkbox("Fog Enabled", &bFogEnable);
+    ImGui::ColorEdit4("Fog Color", (float*)&vFogColor, ImGuiColorEditFlags_NoInputs);
+    ImGui::DragFloat("Fog Start Distance", &fFogStartDistance, 1.0f, 0.0f, 1000.0f, "%.3f");
+    ImGui::DragFloat("Fog Density", &fFogSeaDensity, 0.005f, 0.0f, 1.0f, "%.3f");
 }
