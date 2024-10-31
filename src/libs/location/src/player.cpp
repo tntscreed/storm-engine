@@ -68,13 +68,19 @@ void Player::Move(float dltTime)
         entid_t lcam;
         if (lcam = core.GetEntityId("LocationCamera"))
         {
-            locCam = static_cast<LocationCamera *>(core.GetEntityPointer(lcam));
+            locCam = static_cast<LocationCamera*>(core.GetEntityPointer(lcam));
         }
     }
     else
     {
         locCam->LockFPMode(shootgunMode);
     }
+    
+    if (locCam->GetMode() == LocationCamera::CameraWorkMode::cwm_modern) {
+        MoveModern(dltTime);
+        return;
+    }
+
     // tuner.isVisible = !shootgunMode;
 
     const auto oldSGMode = shootgunMode;
@@ -123,6 +129,184 @@ void Player::Move(float dltTime)
             SetRunMode(IsRunMode(dltTime));
             if (GoForward(dltTime))
             {
+                StartMove(false);
+                StrafeWhenMove(dltTime);
+            }
+            else if (GoBack(dltTime))
+            {
+                if (!IsFight())
+                {
+                    StartMove(true);
+                    StrafeWhenMove(dltTime);
+                }
+                else
+                {
+                    Recoil();
+                }
+            }
+            else
+            {
+                StopMove();
+                StrafeWhenStop(dltTime);
+            }
+        }
+        else
+            lastChange += dltTime;
+        //------------------------------------
+        if (!shootgunMode)
+        {
+            if (IsChangeFightMode())
+            {
+                isSetBlock = false;
+                SetFightMode(!IsFight());
+            }
+            if (IsFight())
+            {
+                if (IsDoBlock())
+                {
+                    // boal -->
+                    if (fgtCurType == fgt_attack_fast || fgtCurType == fgt_attack_force ||
+                        fgtCurType == fgt_attack_round || fgtCurType == fgt_attack_break ||
+                        fgtCurType == fgt_attack_feint || fgtCurType == fgt_parry)
+                    {
+                        StopFightAnimation();
+                    }
+                    // boal <--
+                    Block();
+                }
+                else if (IsDoParry())
+                {
+                    // boal -->
+                    if (fgtCurType == fgt_block || fgtCurType == fgt_blockhit || fgtCurType == fgt_blockbreak ||
+                        fgtCurType == fgt_hit_attack)
+                    {
+                        StopFightAnimation();
+                    }
+                    // boal <--
+                    Parry();
+                }
+                else if (IsDoAttackForce())
+                {
+                    // boal -->
+                    if (fgtCurType == fgt_block || fgtCurType == fgt_blockhit || fgtCurType == fgt_blockbreak)
+                    {
+                        StopFightAnimation();
+                    }
+                    // boal <--
+                    Attack(FindAttackCharacter(), fgt_attack_force);
+                }
+                else if (IsDoAttackFast())
+                {
+                    if (fgtCurType == fgt_block || fgtCurType == fgt_blockhit || fgtCurType == fgt_blockbreak)
+                    {
+                        StopFightAnimation();
+                    }
+                    Attack(FindAttackCharacter(), fgt_attack_fast);
+                }
+                else if (IsDoAttackRound())
+                {
+                    if (fgtCurType == fgt_block || fgtCurType == fgt_blockhit || fgtCurType == fgt_blockbreak ||
+                        fgtCurType == fgt_hit_attack)
+                    {
+                        StopFightAnimation();
+                    }
+                    Attack(FindAttackCharacter(), fgt_attack_round);
+                }
+                else if (IsDoAttackBreak())
+                {
+                    if (fgtCurType == fgt_block || fgtCurType == fgt_blockhit || fgtCurType == fgt_blockbreak)
+                    {
+                        StopFightAnimation();
+                    }
+                    Attack(FindAttackCharacter(), fgt_attack_break);
+                }
+                else if (IsDoAttackFeint())
+                {
+                    if (fgtCurType == fgt_block || fgtCurType == fgt_blockhit || fgtCurType == fgt_blockbreak ||
+                        fgtCurType == fgt_hit_attack)
+                    {
+                        StopFightAnimation();
+                    }
+                    Attack(FindAttackCharacter(), fgt_attack_feint);
+                }
+                else if (IsFire())
+                {
+                    if (fgtCurType == fgt_block || fgtCurType == fgt_blockhit || fgtCurType == fgt_blockbreak ||
+                        fgtCurType == fgt_hit_attack)
+                    {
+                        StopFightAnimation();
+                    }
+                    Fire();
+                }
+            }
+        }
+        else
+        {
+            tuner.alpha = 0.0f;
+            tuner.camAlpha = 0.0f;
+            isFight = true;
+            if (kSMReload >= 1.0f)
+                if (IsFire())
+                    FireFromShootgun();
+        }
+        //------------------------------------
+    }
+    else
+        isEnableJump = false;
+    NPCharacter::Move(dltTime);
+}
+
+void Player::MoveModern(float dltTime) {
+
+    // tuner.isVisible = !shootgunMode;
+
+    const auto oldSGMode = shootgunMode;
+    shootgunMode = false;
+    auto* vd = core.Event("EventSGMode");
+    if (vd)
+    {
+        int32_t data = 0;
+        if (vd->Get(data))
+            shootgunMode = (data != 0);
+    }
+    if (oldSGMode != shootgunMode)
+    {
+        if (shootgunMode)
+        {
+            core.Send_Message(effects, "s", "SGInited");
+            tuner.alpha = 0.0f;
+            tuner.camAlpha = 0.0f;
+            isFight = true;
+        }
+        else
+        {
+            core.Send_Message(effects, "s", "SGRelease");
+            tuner.alpha = 1.0f;
+            tuner.camAlpha = 1.0f;
+            isFight = false;
+        }
+    }
+
+    /*
+    if(core.Controls->GetAsyncKeyState(VK_SPACE) < 0)
+    {
+      impulse.y += 5.0f;
+      impulse.y *= 2;
+    }*/
+
+    if (task.task == npct_none)
+    {
+        isEnableJump = true;
+        if (lastChange > 0.3f)
+        {
+            // lastChange = 0.0f;
+            SetRunMode(IsRunMode(dltTime));
+            if (GoForward(dltTime))
+            {
+                Turn(curPos.x - locCam->GetCamPos().x, curPos.z - locCam->GetCamPos().z);
+                turnSpeed = 0.2f;
+                //ay = nay; // instantly turn
+
                 StartMove(false);
                 StrafeWhenMove(dltTime);
             }

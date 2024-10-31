@@ -29,6 +29,10 @@ class LocationCamera : public storm::Camera
 {
     friend CameraFollow;
 
+    // --------------------------------------------------------------------------------------------
+    // Construction, destruction
+    // --------------------------------------------------------------------------------------------
+  public:
     enum CameraWorkMode
     {
         cwm_none = 0,
@@ -38,12 +42,16 @@ class LocationCamera : public storm::Camera
         // Move camera to preset position
         cwm_free,
         // Free flying camera (debug)
+        cwm_modern,
+        // Modern third-person camera
     };
 
-    // --------------------------------------------------------------------------------------------
-    // Construction, destruction
-    // --------------------------------------------------------------------------------------------
-  public:
+    CVECTOR GetLookTo();
+    CVECTOR GetCamPos();
+
+    // Get Camera Mode
+    CameraWorkMode GetMode();
+
     LocationCamera();
     ~LocationCamera() override;
 
@@ -72,6 +80,8 @@ class LocationCamera : public storm::Camera
     void ExecuteFollow(float dltTime);
     // First-person View Camera
     void ExecuteLook(float dltTime);
+    // Modern Third-Person Camera
+    void ExecuteModern(float dltTime);
     // Execution of a camera observing from a point
     void ExecuteTopos(float dltTime);
     // Free flying camera execution
@@ -106,12 +116,13 @@ class LocationCamera : public storm::Camera
     entid_t loc;
     Location *location;
 
-    // Work mode
-    CameraWorkMode wmode;
     bool isSleep;
     bool lockAx;
 
     float dAx, dAy;
+
+    // Work mode
+    CameraWorkMode wmode;
 
     CVECTOR camPos, lookTo;    // Current camera parameters
     CVECTOR oldPos, oldLookTo; // Last camera position in the previous mode

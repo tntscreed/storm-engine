@@ -209,6 +209,7 @@
 // "lffff" set the camera mode - move to a point with a given speed and follow the character
 #define MSG_CAMERA_MOVE 30513
 #define MSG_CAMERA_FREE 30514 // "l" free flight of the camera
+#define MSG_CAMERA_MODERN 30515
 
 #define MSG_CAMERA_SLEEP 30520 // "ll" stop the camera (1) or resume (0)
 #define MSG_CAMERA_SET_RADIUS 30521 // "lf" set radius

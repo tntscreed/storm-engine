@@ -18,6 +18,7 @@
 #include "model.h"
 #include "string_compare.hpp"
 #include "vma.hpp"
+#include "location_camera.h"
 
 class Location;
 class MODEL;

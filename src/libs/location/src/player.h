@@ -29,6 +29,8 @@ class Player : public NPCharacter
 
     // Move the character to the desired position
     void Move(float dltTime) override;
+    // Move the character based on the modern controls
+    void MoveModern(float dltTime);
     void Update(float dltTime) override;
 
     // Save parameters

@@ -111,6 +111,14 @@ bool LocationCamera::Init()
     return true;
 }
 
+CVECTOR LocationCamera::GetLookTo() {
+    return lookTo;
+}
+
+CVECTOR LocationCamera::GetCamPos() {
+    return camPos;
+}
+
 // Execution
 // #ifndef LOCATIONCAMERA_DEBUG
 void LocationCamera::Execute(uint32_t real_delta)
@@ -291,6 +299,9 @@ void LocationCamera::Execute(uint32_t real_delta)
             character->LockMove(true);
             ExecuteFree(dltTime);
             break;
+        case cwm_modern:
+            ExecuteModern(dltTime);
+            break;
         }
     }
     else
@@ -401,6 +412,11 @@ uint64_t LocationCamera::ProcessMessage(MESSAGE &message)
         wmode = cwm_free;
         kMorph = 1.0f;
         return 1;
+    case MSG_CAMERA_MODERN:
+        forcedPos = false;
+        wmode = cwm_modern;
+        kMorph = 1.0f;
+        return 1;
     case MSG_CAMERA_SLEEP:
         isSleep = message.Long() != 0;
         return 1;
@@ -506,6 +522,10 @@ void LocationCamera::SetMode(CameraWorkMode wm)
     wmode = wm;
 }
 
+LocationCamera::CameraWorkMode LocationCamera::GetMode() {
+    return wmode;
+}
+
 //============================================================================================
 
 //============================================================================================
@@ -550,6 +570,48 @@ void LocationCamera::ExecuteLook(float dltTime)
     lookTo.x = camPos.x + cosf(ax) * sinf(chay);
     lookTo.y = camPos.y - sinf(ax);
     lookTo.z = camPos.z + cosf(ax) * cosf(chay);
+}
+
+void LocationCamera::ExecuteModern(float dltTime) {
+    CVECTOR charPos;
+    character->GetPosition(charPos);  // Get the character's position as the rotation center
+    charPos.y += character->GetHeight();  // Adjust for character height
+
+    CONTROL_STATE csVertical, csHorizontal;
+    character->LockRotate(false);
+
+    // Get vertical and horizontal cursor movements
+    core.Controls->GetControlState("ChrCamTurnV", csVertical);  // Vertical control state (pitch)
+    core.Controls->GetControlState("ChrCamTurnH", csHorizontal);  // Horizontal control state (yaw)
+
+    // Rotation adjustments based on cursor input
+    float pitchDelta = -1 * csVertical.lValue * 0.005f;    // Up and down rotation
+    float yawDelta = -1 * csHorizontal.lValue * 0.005f;    // Left and right rotation
+
+    // Calculate current distance between camera and character
+    //float distance = sqrtf(powf(camPos.x - charPos.x, 2) + powf(camPos.y - charPos.y, 2) + powf(camPos.z - charPos.z, 2));
+    float distance = 4;
+
+    // Get current angles from the camera position to the character's position
+    float currentYaw = atan2f(camPos.z - charPos.z, camPos.x - charPos.x);
+    float currentPitch = asinf((camPos.y - charPos.y) / distance);
+
+    // Update yaw and pitch angles based on cursor movement
+    currentYaw += yawDelta;
+    currentPitch += pitchDelta;
+
+    // Clamp the pitch angle to avoid flipping the camera (optional)
+    currentPitch = std::clamp(currentPitch, -1.5f, 1.5f);  // Limit to about ±90 degrees
+
+    // Calculate the new camera position in spherical coordinates
+    camPos.x = charPos.x + distance * cosf(currentPitch) * cosf(currentYaw);
+    camPos.z = charPos.z + distance * cosf(currentPitch) * sinf(currentYaw);
+    camPos.y = charPos.y + distance * sinf(currentPitch);
+
+    // Ensure the camera is always looking at the character
+    lookTo.x = charPos.x;
+    lookTo.y = charPos.y;
+    lookTo.z = charPos.z;
 }
 
 // Execution of a camera observing from a point
