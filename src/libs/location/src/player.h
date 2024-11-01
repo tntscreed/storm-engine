@@ -50,6 +50,13 @@ class Player : public NPCharacter
     void StrafeWhenMove(float dltTime);
     void StrafeWhenStop(float dltTime);
 
+    bool IsForwardInput();
+    bool IsBackInput();
+    bool IsRightInput();
+    bool IsLeftInput();
+    bool IsMovementInput();
+    CVECTOR GetModernMovementVector();
+
     bool IsDoBlock();
     bool IsDoParry();
     bool IsDoAttackForce();

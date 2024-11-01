@@ -76,6 +76,7 @@ void Player::Move(float dltTime)
         locCam->LockFPMode(shootgunMode);
     }
     
+    // If the camera is set to modern mode, use the MoveModern method instead
     if (locCam->GetMode() == LocationCamera::CameraWorkMode::cwm_modern) {
         MoveModern(dltTime);
         return;
@@ -256,6 +257,52 @@ void Player::Move(float dltTime)
     NPCharacter::Move(dltTime);
 }
 
+bool Player::IsForwardInput() {
+    CONTROL_STATE cs;
+    core.Controls->GetControlState("ChrForward", cs);
+    return cs.lValue != 0; 
+}
+bool Player::IsBackInput() {
+    CONTROL_STATE cs;
+    core.Controls->GetControlState("ChrBackward", cs);
+    return cs.lValue != 0;
+}
+
+bool Player::IsRightInput() {
+    CONTROL_STATE cs;
+    core.Controls->GetControlState("ChrStrafeRight", cs);
+    return cs.lValue != 0;
+}
+
+bool Player::IsLeftInput() {
+    CONTROL_STATE cs;
+    core.Controls->GetControlState("ChrStrafeLeft", cs);
+    return cs.lValue != 0;
+}
+
+bool Player::IsMovementInput() {
+    return IsForwardInput() || IsBackInput() || IsRightInput() || IsLeftInput();
+}
+
+CVECTOR Player::GetModernMovementVector() {
+    CVECTOR res = CVECTOR(0.0f, 0.0f, 0.0f);
+
+    if (IsForwardInput()) {
+        res.z = 1.0f;
+    }
+    if (IsBackInput()) {
+        res.z = -1.0f;
+    }
+    if (IsRightInput()) {
+        res.x = 1.0f;
+    }
+    if (IsLeftInput()) {
+        res.x = -1.0f;
+    }
+
+    return res;
+}
+
 void Player::MoveModern(float dltTime) {
 
     // tuner.isVisible = !shootgunMode;
@@ -294,6 +341,9 @@ void Player::MoveModern(float dltTime) {
       impulse.y *= 2;
     }*/
 
+    CVECTOR movementVector = GetModernMovementVector(); // The direction the player should turn in relative to where the camera is facing.
+
+
     if (task.task == npct_none)
     {
         isEnableJump = true;
@@ -301,26 +351,24 @@ void Player::MoveModern(float dltTime) {
         {
             // lastChange = 0.0f;
             SetRunMode(IsRunMode(dltTime));
-            if (GoForward(dltTime))
+            if (IsMovementInput())
             {
-                Turn(curPos.x - locCam->GetCamPos().x, curPos.z - locCam->GetCamPos().z);
-                turnSpeed = 0.2f;
-                //ay = nay; // instantly turn
+                // Turn the character forward from the camera
+                // Calculate the difference between current position and camera position
+                float turnX = curPos.x - locCam->GetCamPos().x;
+                float turnZ = curPos.z - locCam->GetCamPos().z;
+
+                
+
+                float angleForward = 0.0f;
+                float angle = atan2f(turnX, turnZ);
+
+                turnSpeed = 0.05f;
+                Turn(angle);
+                ay = nay; // instantly turn
 
                 StartMove(false);
                 StrafeWhenMove(dltTime);
-            }
-            else if (GoBack(dltTime))
-            {
-                if (!IsFight())
-                {
-                    StartMove(true);
-                    StrafeWhenMove(dltTime);
-                }
-                else
-                {
-                    Recoil();
-                }
             }
             else
             {
@@ -638,6 +686,10 @@ bool Player::IsRunMode(float dltTime)
 void Player::StrafeWhenMove(float dltTime)
 {
     strafeMove = 0.0f;
+
+    if (locCam->GetMode() == LocationCamera::CameraWorkMode::cwm_modern) {
+        return;
+    }
 
     // ----------------------------------------------------------------------------------------
     // If you need to turn off strafe - uncomment return
