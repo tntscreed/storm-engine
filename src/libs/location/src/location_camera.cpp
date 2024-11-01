@@ -593,20 +593,26 @@ void LocationCamera::ExecuteModern(float dltTime) {
     float distance = 4;
 
     // Get current angles from the camera position to the character's position
-    float currentYaw = atan2f(camPos.z - charPos.z, camPos.x - charPos.x);
-    float currentPitch = asinf((camPos.y - charPos.y) / distance);
+    //float currentYaw = atan2f(camPos.z - charPos.z, camPos.x - charPos.x);
+    //float currentPitch = asinf((camPos.y - charPos.y) / distance);
 
     // Update yaw and pitch angles based on cursor movement
-    currentYaw += yawDelta;
-    currentPitch += pitchDelta;
+    //currentYaw += yawDelta;
+    //currentPitch += pitchDelta;
+    modernYaw += yawDelta;
+    modernPitch += pitchDelta;
 
-    // Clamp the pitch angle to avoid flipping the camera (optional)
-    currentPitch = std::clamp(currentPitch, -1.5f, 1.5f);  // Limit to about ±90 degrees
+    // Clamp the pitch angle to avoid flipping the camera
+    //currentPitch = std::clamp(currentPitch, -1.22f, 1.22f);  // Limit to about 70 degrees
+    modernPitch = std::clamp(modernPitch, -1.22f, 1.22f);  // Limit to about 70 degrees
 
     // Calculate the new camera position in spherical coordinates
-    camPos.x = charPos.x + distance * cosf(currentPitch) * cosf(currentYaw);
-    camPos.z = charPos.z + distance * cosf(currentPitch) * sinf(currentYaw);
-    camPos.y = charPos.y + distance * sinf(currentPitch);
+    //camPos.x = charPos.x + distance * cosf(currentPitch) * cosf(currentYaw);
+    //camPos.z = charPos.z + distance * cosf(currentPitch) * sinf(currentYaw);
+    //camPos.y = charPos.y + distance * sinf(currentPitch);
+    camPos.x = charPos.x + distance * cosf(modernPitch) * cosf(modernYaw);
+    camPos.z = charPos.z + distance * cosf(modernPitch) * sinf(modernYaw);
+    camPos.y = charPos.y + distance * sinf(modernPitch);
 
     // Ensure the camera is always looking at the character
     lookTo.x = charPos.x;

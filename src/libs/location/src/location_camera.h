@@ -108,6 +108,9 @@ class LocationCamera : public storm::Camera
     float radius;        // Radius of distance from the character
     float rotInertia;    // Rotational inertia
     float radInertia;    // Inertia of approaching
+    // Used for the modern camera
+    float modernYaw = 0.0f;
+    float modernPitch = 0.0f;
 
     bool isSpecialMode;
     bool isLockFPMode;
