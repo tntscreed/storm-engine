@@ -573,51 +573,7 @@ void LocationCamera::ExecuteLook(float dltTime)
 }
 
 void LocationCamera::ExecuteModern(float dltTime) {
-    CVECTOR charPos;
-    character->GetPosition(charPos);  // Get the character's position as the rotation center
-    charPos.y += character->GetHeight();  // Adjust for character height
-
-    CONTROL_STATE csVertical, csHorizontal;
-    character->LockRotate(false);
-
-    // Get vertical and horizontal cursor movements
-    core.Controls->GetControlState("ChrCamTurnV", csVertical);  // Vertical control state (pitch)
-    core.Controls->GetControlState("ChrCamTurnH", csHorizontal);  // Horizontal control state (yaw)
-
-    // Rotation adjustments based on cursor input
-    float pitchDelta = -1 * csVertical.lValue * 0.005f;    // Up and down rotation
-    float yawDelta = -1 * csHorizontal.lValue * 0.005f;    // Left and right rotation
-
-    // Calculate current distance between camera and character
-    //float distance = sqrtf(powf(camPos.x - charPos.x, 2) + powf(camPos.y - charPos.y, 2) + powf(camPos.z - charPos.z, 2));
-    float distance = 4;
-
-    // Get current angles from the camera position to the character's position
-    //float currentYaw = atan2f(camPos.z - charPos.z, camPos.x - charPos.x);
-    //float currentPitch = asinf((camPos.y - charPos.y) / distance);
-
-    // Update yaw and pitch angles based on cursor movement
-    //currentYaw += yawDelta;
-    //currentPitch += pitchDelta;
-    modernYaw += yawDelta;
-    modernPitch += pitchDelta;
-
-    // Clamp the pitch angle to avoid flipping the camera
-    //currentPitch = std::clamp(currentPitch, -1.22f, 1.22f);  // Limit to about 70 degrees
-    modernPitch = std::clamp(modernPitch, -1.22f, 1.22f);  // Limit to about 70 degrees
-
-    // Calculate the new camera position in spherical coordinates
-    //camPos.x = charPos.x + distance * cosf(currentPitch) * cosf(currentYaw);
-    //camPos.z = charPos.z + distance * cosf(currentPitch) * sinf(currentYaw);
-    //camPos.y = charPos.y + distance * sinf(currentPitch);
-    camPos.x = charPos.x + distance * cosf(modernPitch) * cosf(modernYaw);
-    camPos.z = charPos.z + distance * cosf(modernPitch) * sinf(modernYaw);
-    camPos.y = charPos.y + distance * sinf(modernPitch);
-
-    // Ensure the camera is always looking at the character
-    lookTo.x = charPos.x;
-    lookTo.y = charPos.y;
-    lookTo.z = charPos.z;
+    cf.Update(dltTime * character->CameraTurnSpeed());
 }
 
 // Execution of a camera observing from a point

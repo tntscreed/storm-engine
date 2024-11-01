@@ -11,6 +11,7 @@
 #include "camera_follow.h"
 #include "character.h"
 #include "location_camera.h"
+#include <core.h>
 
 //============================================================================================
 
@@ -64,7 +65,11 @@ void CameraFollow::Update(float dltTime)
     if (~(lc->pos - oldPos) >= lc->teleport_dist * lc->teleport_dist)
         isBrn = true;
     // Calculating a new position
-    if (!isBrn)
+
+    if (lc->GetMode() == LocationCamera::CameraWorkMode::cwm_modern) {
+        MoveCameraModern(dltTime);
+    }
+    else if (!isBrn)
     {
         MoveCamera(dltTime);
     }
@@ -89,7 +94,7 @@ void CameraFollow::Update(float dltTime)
     lc->camPos = camPos;
     lc->lookTo = lookTo;
     // Limit in height
-    if (lc->camPos.y < lc->pos.y + lc->lheight * 0.5f)
+    if (lc->GetMode() != LocationCamera::CameraWorkMode::cwm_modern && lc->camPos.y < lc->pos.y + lc->lheight * 0.5f)
         lc->camPos.y = lc->pos.y + lc->lheight * 0.5f;
 
     /*
@@ -164,6 +169,45 @@ void CameraFollow::MoveCamera(float dltTime)
     }
     ChangeRadius(dltTime, FindRadius(camay));
     CalcPosition(camay, camradius, 0.0f, camPos);
+}
+
+void CameraFollow::MoveCameraModern(float dltTime) {
+    lc->character->LockRotate(false);
+
+    if (dltTime <= 0.0f)
+        return;
+
+    // Get vertical and horizontal cursor movements
+    CONTROL_STATE csVertical, csHorizontal;
+    core.Controls->GetControlState("ChrCamTurnV", csVertical);  // Vertical control state (pitch)
+    core.Controls->GetControlState("ChrCamTurnH", csHorizontal);  // Horizontal control state (yaw)
+
+    // Rotation adjustments based on cursor input
+    float pitchDelta = -1 * csVertical.lValue * 0.005f;    // Up and down rotation
+    float yawDelta = -1 * csHorizontal.lValue * 0.005f;    // Left and right rotation
+
+    lookTo = lc->pos;
+    lookTo.y += lc->lheight;
+
+    float max_distance = 4; // radius
+    lc->radius = max_distance; // Used as maximum radius in FindRadius
+
+    modernYaw += yawDelta;
+    modernPitch += pitchDelta;
+
+    modernPitch = std::clamp(modernPitch, -0.34f, 1.22f); // Limit the angles
+
+    camay = modernYaw;
+    camradius = max_distance;
+
+    static const auto pi = 3.14159265359f;
+    camradius = FindRadius(camay * pi); // Likely not the good solution
+
+    CVECTOR charPos;
+    lc->character->GetPosition(charPos);
+    camPos.x = charPos.x + camradius * cosf(modernPitch) * cosf(modernYaw);
+    camPos.z = charPos.z + camradius * cosf(modernPitch) * sinf(modernYaw);
+    camPos.y = charPos.y + camradius * sinf(modernPitch);
 }
 
 // Reinitialize camera position
@@ -247,7 +291,7 @@ void CameraFollow::DrawDebug()
 float CameraFollow::FindRadius(float curAng) const
 {
     static const auto pi = 3.14159265359f;
-    static const auto day = pi * 0.25f; // Vertical deviation
+    static const auto day = pi * 0.25f; // Horizontal deviation
     static const auto dax = pi * 0.16f; // Vertical deviation
 
 #ifdef LFC_DEBUG

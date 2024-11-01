@@ -40,6 +40,8 @@ class CameraFollow
 
     // Find current camera position
     void MoveCamera(float dltTime);
+    // Find current camera position (modern third-person camera)
+    void MoveCameraModern(float dltTime);
     // Reinitialize camera position
     void BornCamera();
     // Calculate camera position for a given angle
@@ -74,6 +76,9 @@ class CameraFollow
     float rotAcc;       // Stop acceleration
     float kRadInert;    // Dependence of the inertia of the radius change on the turning speed
     float kRadInertCur; // Current dependence of inertia
+    // Used for the modern camera
+    float modernYaw = 0.0f;
+    float modernPitch = 0.0f;
 
     static float fndRadius;     // Current radius when searching
     static float fndMaxRadius;  // Maximum search radius
