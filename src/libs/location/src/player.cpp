@@ -357,14 +357,18 @@ void Player::MoveModern(float dltTime) {
                 // Calculate the difference between current position and camera position
                 float turnX = curPos.x - locCam->GetCamPos().x;
                 float turnZ = curPos.z - locCam->GetCamPos().z;
+                float offsetX = movementVector.x;
+                float offsetZ = movementVector.z;
 
                 
 
-                float angleForward = 0.0f;
-                float angle = atan2f(turnX, turnZ);
+                float angleForward = atan2f(turnX, turnZ);
+                float angleOffset = atan2f(offsetX, offsetZ);
+
+                float newAngle = angleForward + angleOffset;
 
                 turnSpeed = 0.05f;
-                Turn(angle);
+                Turn(newAngle);
                 ay = nay; // instantly turn
 
                 StartMove(false);
