@@ -153,7 +153,7 @@ void CameraFollow::MoveCamera(float dltTime)
     if (kRadInert > 1.0f)
         kRadInert = 1.0f;
     kRadInert = powf(kRadInert, 5.0f);
-    if (fabsf(dAng) > 0.001f && lc->GetMode() != LocationCamera::CameraWorkMode::cwm_modern)
+    if (fabsf(dAng) > 0.001f && lc->GetMode())
     {
         // The camera rotates around the character
         auto k = dltTime * lc->rotInertia;
