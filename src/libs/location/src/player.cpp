@@ -367,9 +367,9 @@ void Player::MoveModern(float dltTime) {
 
                 float newAngle = angleForward + angleOffset;
 
-                turnSpeed = 0.05f;
+                turnspd = 20.0f;
                 Turn(newAngle);
-                ay = nay; // instantly turn
+                //ay = nay; // instantly turn
 
                 StartMove(false);
                 StrafeWhenMove(dltTime);

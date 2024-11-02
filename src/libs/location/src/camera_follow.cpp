@@ -196,18 +196,31 @@ void CameraFollow::MoveCameraModern(float dltTime) {
     modernPitch += pitchDelta;
 
     modernPitch = std::clamp(modernPitch, -0.34f, 1.22f); // Limit the angles
+    lc->ax = modernPitch;
 
     camay = modernYaw;
     camradius = max_distance;
 
+
     static const auto pi = 3.14159265359f;
-    camradius = FindRadius(camay * pi); // Likely not the good solution
+    //camradius = FindRadius(camay * pi); // Likely not the good solution
 
     CVECTOR charPos;
     lc->character->GetPosition(charPos);
-    camPos.x = charPos.x + camradius * cosf(modernPitch) * cosf(modernYaw);
-    camPos.z = charPos.z + camradius * cosf(modernPitch) * sinf(modernYaw);
-    camPos.y = charPos.y + camradius * sinf(modernPitch);
+    //camPos.x = charPos.x + camradius * cosf(modernPitch) * cosf(modernYaw);
+    //camPos.z = charPos.z + camradius * cosf(modernPitch) * sinf(modernYaw);
+    //camPos.y = charPos.y + camradius * sinf(modernPitch);
+    modernDesiredX = charPos.x + camradius * cosf(modernPitch) * cosf(modernYaw);
+    modernDesiredZ = charPos.z + camradius * cosf(modernPitch) * sinf(modernYaw);
+    modernDesiredY = charPos.y + camradius * sinf(modernPitch);
+
+    float horizontalSmoothing = 0.3f; // The higher, the quicker the camera moves horizontally
+    float verticalSmoothing = 0.3f; // The higher, the quicker the camera moves vertically
+
+    // Smooth camera movement
+    camPos.x += (modernDesiredX - camPos.x) * horizontalSmoothing;
+    camPos.y += (modernDesiredY - camPos.y) * verticalSmoothing;
+    camPos.z += (modernDesiredZ - camPos.z) * horizontalSmoothing;
 }
 
 // Reinitialize camera position

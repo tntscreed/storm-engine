@@ -79,6 +79,9 @@ class CameraFollow
     // Used for the modern camera
     float modernYaw = 0.0f;
     float modernPitch = 0.0f;
+    float modernDesiredX;
+    float modernDesiredY;
+    float modernDesiredZ;
 
     static float fndRadius;     // Current radius when searching
     static float fndMaxRadius;  // Maximum search radius
