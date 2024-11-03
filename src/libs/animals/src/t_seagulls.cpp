@@ -5,7 +5,7 @@
 #include "model.h"
 #include "rands.h"
 #include "shared/messages.h"
-#include "v_file_service.h"
+#include "file_service.h"
 //#pragma warning (disable : 4244)
 
 //--------------------------------------------------------------------

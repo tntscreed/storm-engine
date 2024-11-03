@@ -96,7 +96,7 @@ class IFS : public INIFILE
     void Format(char *file_data, int32_t file_size);
     bool VoidSym(char symbol);
 
-    VFILE_SERVICE *fs;
+    FILE_SERVICE *fs;
     char *FileName;
     bool bDataChanged;
     uint32_t Reference;
@@ -131,7 +131,7 @@ class IFS : public INIFILE
     }
 #undef IFS_NOT_IMPLEMENTED
 
-    IFS(VFILE_SERVICE *_fs);
+    IFS(FILE_SERVICE *_fs);
     ~IFS();
 
     bool LoadFile(const char *file_name);

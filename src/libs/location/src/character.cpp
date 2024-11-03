@@ -13,6 +13,7 @@
 #include "character.h"
 #include "characters_groups.h"
 #include "lights.h"
+#include "storm\blade\blade.hpp"
 
 #include "debug-trap.h"
 #include "geometry.h"
@@ -996,6 +997,32 @@ uint32_t Character::AttributeChanged(ATTRIBUTES *apnt)
         UpdateActionsData();
         // Updating the animation being played
         UpdateAnimation();
+    }
+    // Engine crashes because attribute has no parent (orphaned)
+    // Disabled this code until we figure out how this can happen
+    else if (false && MatchAttributePath("equipment.*.locator", *apnt) )
+    {
+        if (isBladeSet)
+        {
+            const std::string equipment_id = apnt->GetParent()->GetThisName();
+            auto *blade_ptr = static_cast<BLADE *>(core.GetEntityPointer(blade));
+            if (blade_ptr)
+            {
+                blade_ptr->SetEquipmentLocator(equipment_id, apnt->GetValue() );
+            }
+        }
+    }
+    else if (MatchAttributePath("equipment.*.activeLocator", *apnt) )
+    {
+        if (isBladeSet)
+        {
+            const std::string equipment_id = apnt->GetParent()->GetThisName();
+            auto *blade_ptr = static_cast<BLADE *>(core.GetEntityPointer(blade));
+            if (blade_ptr)
+            {
+                blade_ptr->SetEquipmentActiveLocator(equipment_id, apnt->GetValue() );
+            }
+        }
     }
     return 0;
 }
@@ -3317,6 +3344,30 @@ bool Character::zSetBlade(MESSAGE &message)
             return false;
     }
     core.Send_Message(blade, "llisfll", MSG_BLADE_SET, nBladeIdx, mdl, name.c_str(), t, s, e);
+
+    ATTRIBUTES *equipment_attr = AttributesPointer->GetAttributeClass("equipment");
+    if (equipment_attr != nullptr)
+    {
+        auto *blade_ptr = static_cast<BLADE *>(core.GetEntityPointerSafe(blade));
+        Assert(blade_ptr);
+
+        for (size_t i = 0; i < equipment_attr->GetAttributesNum(); ++i)
+        {
+            ATTRIBUTES *equipment_entry = equipment_attr->GetAttributeClass(i);
+            Assert(equipment_entry != nullptr);
+            if (equipment_entry->HasAttribute("locator"))
+            {
+                blade_ptr->SetEquipmentLocator(equipment_entry->GetThisName(),
+                                               to_string(equipment_entry->GetAttribute("locator")));
+            }
+            if (equipment_entry->HasAttribute("activeLocator"))
+            {
+                blade_ptr->SetEquipmentActiveLocator(equipment_entry->GetThisName(),
+                                                     to_string(equipment_entry->GetAttribute("active_locator")));
+            }
+        }
+    }
+
     UpdateWeapons();
     return true;
 }

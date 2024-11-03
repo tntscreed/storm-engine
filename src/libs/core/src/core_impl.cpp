@@ -119,6 +119,25 @@ void CoreImpl::Init()
     SetLayerType(EDITOR_REALIZE, layer_type_t::realize);
     SetLayerType(INFO_REALIZE, layer_type_t::realize);
     SetLayerType(SOUND_DEBUG_REALIZE, layer_type_t::realize);
+
+    storm::editor::EngineEditor::RegisterEditorTool("Entities", [this] (bool &active) {
+        entity_manager_.ShowEditor(active);
+    });
+}
+
+void CoreImpl::InitializeEditor(IDirect3DDevice9 *device)
+{
+    editor_ = std::make_unique<storm::editor::EngineEditor>(GetWindow()->SDLHandle(), device);
+}
+
+bool CoreImpl::IsEditorEnabled()
+{
+    return isEditorEnabled_;
+}
+
+void CoreImpl::EnableEditor(bool enable)
+{
+    isEditorEnabled_ = enable;
 }
 
 void CoreImpl::InitBase()
@@ -300,9 +319,7 @@ void CoreImpl::ProcessEngineIniFile()
 
             if (iScriptVersion != ENGINE_SCRIPT_VERSION)
             {
-#ifdef _WIN32 // FIX_LINUX Cursor
-                ShowCursor(true);
-#endif
+                GetWindow()->ShowCursor(true);
                 SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error", "Wrong script version", nullptr);
                 Compiler->ExitProgram();
             }
@@ -1013,6 +1030,11 @@ bool CoreImpl::IsLayerFrozen(layer_index_t index) const
 void CoreImpl::ForEachEntity(const std::function<void(entptr_t)> &f)
 {
     entity_manager_.ForEachEntity(f);
+}
+
+storm::editor::EngineEditor *CoreImpl::GetEditor()
+{
+    return editor_.get();
 }
 
 void CoreImpl::collectCrashInfo() const

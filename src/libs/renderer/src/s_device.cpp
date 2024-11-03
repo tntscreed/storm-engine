@@ -13,10 +13,11 @@
 #include "texture.h"
 #include "v_s_stack.h"
 
-#include <SDL_timer.h>
-#include <algorithm>
-
 #include <fmt/chrono.h>
+#include <SDL_timer.h>
+
+#include <algorithm>
+#include <imgui_impl_sdl2.h>
 
 #ifdef _WIN32
 #include <DxErr.h>
@@ -805,6 +806,11 @@ bool DX9RENDER::InitDevice(bool windowed, HWND _hwnd, int32_t width, int32_t hei
     effects_.setDevice(d3d9);
 #endif
 
+    if (core.IsEditorEnabled() )
+    {
+        core.InitializeEditor(d3d9);
+    }
+
     // Create render targets for POST PROCESS effects
     d3d9->GetRenderTarget(0, &pOriginalScreenSurface);
     d3d9->GetDepthStencilSurface(&pOriginalDepthSurface);
@@ -1257,6 +1263,10 @@ bool DX9RENDER::DX9EndScene()
 
     if (CHECKD3DERR(EndScene()))
         return false;
+
+    if (auto *editor = core.GetEditor(); editor != nullptr) {
+        editor->EndFrame();
+    }
 
     if (bMakeShoot)
         MakeScreenShot();
@@ -2736,6 +2746,12 @@ void DX9RENDER::RunStart()
     dwNumLI = 0;
     BeginScene();
 
+    auto *editor = core.GetEditor();
+
+    if (editor != nullptr) {
+        editor->StartFrame();
+    }
+
     //------------------------------------------
     bInsideScene = true;
 
@@ -2755,8 +2771,10 @@ void DX9RENDER::RunStart()
         InvokeEntitiesRestoreRender();
     }
 
-    SetRenderState(D3DRS_FILLMODE, (core.Controls->GetDebugAsyncKeyState('F') < 0) ? D3DFILL_WIREFRAME : D3DFILL_SOLID);
-    // SetRenderState(D3DRS_FILLMODE, D3DFILL_SOLID); eddy
+    SetRenderState(D3DRS_FILLMODE,
+                   (editor != nullptr && editor->IsDebugFlagEnabled(storm::editor::DebugFlag::RenderWireframe))
+                       ? D3DFILL_WIREFRAME
+                       : D3DFILL_SOLID);
 
     PlayToTexture();
 

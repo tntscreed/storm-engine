@@ -1010,12 +1010,14 @@ void Location::CreateSphere()
 
 bool Location::IsExDebugView()
 {
-    return core.Controls->GetDebugAsyncKeyState('O') < 0;
+    const auto *editor = core.GetEditor();
+    return editor != nullptr && editor->IsDebugFlagEnabled(storm::editor::DebugFlag::ExtendedLocationDebug);
 }
 
 bool Location::IsDebugView()
 {
-    return core.Controls->GetDebugAsyncKeyState('G') < 0 || core.Controls->GetDebugAsyncKeyState('O') < 0;
+    const auto *editor = core.GetEditor();
+    return editor != nullptr && (editor->IsDebugFlagEnabled(storm::editor::DebugFlag::LocationDebug) || editor->IsDebugFlagEnabled(storm::editor::DebugFlag::ExtendedLocationDebug) );
 }
 
 // Write text

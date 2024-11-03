@@ -6,6 +6,8 @@
 #include <ranges>
 #include <type_traits>
 
+#include "storm/editor/storm_imgui.hpp"
+#include "storm/layers.hpp"
 #include "string_compare.hpp"
 #include "vma.hpp"
 
@@ -13,6 +15,7 @@
 
 #include <chrono>
 #include <functional>
+#include <imgui.h>
 
 namespace
 {
@@ -485,4 +488,93 @@ void EntityManager::ForEachEntity(const std::function<void(entptr_t)> &f)
             }
         }
     });
+}
+
+void EntityManager::ShowEditor(bool &active)
+{
+    if (ImGui::Begin("Entities", &active, 0))
+    {
+        auto text = std::format("There are currently {} entities", entities_.size() - freeIndices_.size());
+        ImGui::Text(text.c_str());
+
+        static entid_t selected_entity = invalid_entity;
+
+        if (ImGui::BeginTable("Entities", 2, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_Resizable | ImGuiTableFlags_Reorderable) )
+        {
+            ImGui::TableSetupColumn("ID", ImGuiTableColumnFlags_WidthFixed);
+            ImGui::TableSetupColumn("Class", ImGuiTableColumnFlags_WidthStretch);
+
+            ImGui::TableHeadersRow();
+
+            std::ranges::for_each(entities_, [&](const EntityInternalData &data) {
+                if (data.state == kValid)
+                {
+                    ImGui::TableNextRow();
+                    ImGui::TableNextColumn();
+
+                    std::string label = std::to_string(data.id);
+                    if (ImGui::Selectable(label.c_str(), data.id == selected_entity, ImGuiSelectableFlags_SpanAllColumns) )
+                    {
+                        selected_entity = data.id;
+                    }
+                    ImGui::TableNextColumn();
+
+                    VMA *pClass = nullptr;
+                    for (const auto &c : __STORM_CLASSES_REGISTRY)
+                    {
+                        if (c->GetHash() == data.hash)
+                        {
+                            pClass = c;
+                            break;
+                        }
+                    }
+                    if (pClass != nullptr)
+                    {
+                        ImGui::Text("%s", pClass->GetName());
+                    }
+                }
+            });
+
+            ImGui::EndTable();
+        }
+
+        if (ImGui::Begin("Entity Properties") )
+        {
+            Entity *entity = GetEntityPointer(selected_entity);
+            if (entity != nullptr)
+            {
+                // Show layer info
+                const auto entity_idx = GetEntityDataIdx(entity->GetId() );
+                EntityInternalData &data = entities_[entity_idx];
+                if (ImGui::TreeNode("Layers") ) {
+                    if (ImGui::BeginTable("layer_selection", 2, ImGuiTableFlags_Resizable | ImGuiTableFlags_Borders) ) {
+                        size_t i = 0;
+                        for (const auto &layer : layers_) {
+                            ImGui::TableNextRow();
+                            ImGui::TableNextColumn();
+                            std::string label = fmt::format("{}", storm::GetLayerName(i) );
+                            bool selected = ( (data.mask >> i) & 1) == 1;
+                            if (ImGui::Selectable(label.c_str(), &selected) ) {
+                                if (selected) {
+                                    AddToLayer(i, selected_entity, data.priorities[i]);
+                                }
+                                else {
+                                    RemoveFromLayer(i, selected_entity);
+                                }
+                            }
+                            ImGui::TableNextColumn();
+                            ImGui::InputScalar("##priority", ImGuiDataType_U32, &data.priorities[i]);
+                            ++i;
+                        }
+                        ImGui::EndTable();
+                    }
+                }
+                // Show custom editor
+                entity->ShowEditor();
+            }
+            ImGui::End();
+        }
+
+        ImGui::End();
+    }
 }

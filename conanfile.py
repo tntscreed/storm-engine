@@ -18,6 +18,8 @@ class StormEngine(ConanFile):
     # dependencies used in deploy binaries
     # conan-center
     requires = ["zlib/1.2.13", "spdlog/1.13.0", "fast_float/3.4.0", "mimalloc/2.1.7", "sentry-native/0.6.5", "tomlplusplus/3.3.0", "nlohmann_json/3.11.2",
+    "imgui/1.90-docking",
+    "cli11/2.3.2",
     # gitlab.com/piratesahoy
     "directx/9.0@piratesahoy+storm-engine/stable", "fmod/2.02.05@piratesahoy+storm-engine/stable"]
     # aux dependencies (e.g. for tests)
@@ -50,6 +52,14 @@ class StormEngine(ConanFile):
         self.__dest = str(self.options.output_directory) + "/" + getenv("CONAN_IMPORT_PATH", "bin")
         self.__install_folder("/src/techniques", "/resource/techniques")
         self.__install_folder("/src/libs/shared_headers/include/shared", "/resource/shared")
+
+        self.__copy_imgui_binding("imgui_impl_sdl2.cpp")
+        self.__copy_imgui_binding("imgui_impl_sdl2.h")
+        self.__copy_imgui_misc("imgui_stdlib.cpp")
+        self.__copy_imgui_misc("imgui_stdlib.h")
+        if self.settings.os == "Windows":
+            self.__copy_imgui_binding("imgui_impl_dx9.cpp")
+            self.__copy_imgui_binding("imgui_impl_dx9.h")
 
         if self.settings.os == "Windows":
             if self.settings.build_type == "Debug":
@@ -113,3 +123,9 @@ class StormEngine(ConanFile):
 
     def __install_folder(self, src, dst):
         copy_tree(self.recipe_folder + src, self.__dest + dst)
+
+    def __copy_imgui_binding(self, name):
+        self.copy(name, dst=str(self.options.output_directory) + "/imgui", src="res/bindings")
+
+    def __copy_imgui_misc(self, name):
+        self.copy(name, dst=str(self.options.output_directory) + "/imgui", src="res/misc/cpp")
