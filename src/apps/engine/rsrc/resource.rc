@@ -80,7 +80,7 @@ BEGIN
             VALUE "FileDescription", "Storm Engine"
             VALUE "FileVersion", "2, 9, 0, 1"
             VALUE "InternalName", "engine"
-            VALUE "LegalCopyright", "Copyright 2008-2023"
+            VALUE "LegalCopyright", "Copyright 2008-2025"
             VALUE "OriginalFilename", "engine.exe"
             VALUE "ProductName", "Storm Engine"
             VALUE "ProductVersion", "2, 9, 0, 1"
